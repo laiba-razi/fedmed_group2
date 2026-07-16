@@ -1,0 +1,3 @@
+"""
+Federated averaging strategy.
+"""
