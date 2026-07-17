@@ -1,11 +1,34 @@
-# Federated Learning Module
+# FedMed Federated Learning Module
 
-Owner: Mallikarjun
+## Responsibilities
 
-This module contains the Flower-based federated learning implementation.
+This module is responsible for:
 
-Planned Components:
-- Flower Server
-- Flower Client
-- Federated Strategy (FedAvg)
-- Configuration
+- Flower server
+- Flower clients
+- Federated training strategy
+- Client communication
+- Dataset partitioning
+
+---
+
+## Current Progress
+
+### ✅ Day 1
+
+- Module structure created
+
+### ✅ Day 2
+
+- Python virtual environment configured
+- Dependencies installed
+- Flower server initialized
+- Central configuration added
+
+---
+
+## Next
+
+- Implement Flower client
+- Register simulated hospital nodes
+- Configure FedAvg strategy
