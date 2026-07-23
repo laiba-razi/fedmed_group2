@@ -41,15 +41,4 @@ def test_model():
 
 
 if __name__ == "__main__":
-    import torch
-
-    model = build_model()
-
-    print("✅ Model created successfully!")
-
-    dummy_input = torch.randn(1, 1, 128, 128)
-
-    output = model(dummy_input)
-
-    print(f"Input Shape : {dummy_input.shape}")
-    print(f"Output Shape: {output.shape}")
+    test_model()

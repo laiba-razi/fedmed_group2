@@ -9,16 +9,26 @@ from backend.federated.dataset import get_dataloader
 from backend.federated.model import build_model
 
 # ============================================================
+# Device Configuration
+# ============================================================
+
+DEVICE = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
+print(f"Using device: {DEVICE}")
+
+# ============================================================
 # Checkpoint Configuration
 # ============================================================
 
 CHECKPOINT_DIR = "checkpoints"
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-
 # ============================================================
 # Flower Parameter Utilities
 # ============================================================
+
 
 def get_parameters(model):
     """Convert model parameters to NumPy arrays."""
@@ -30,6 +40,7 @@ def get_parameters(model):
 
 def set_parameters(model, parameters):
     """Load NumPy parameters into the PyTorch model."""
+
     params_dict = zip(model.state_dict().keys(), parameters)
 
     state_dict = {
@@ -44,17 +55,24 @@ def set_parameters(model, parameters):
 # Local Training
 # ============================================================
 
+
 def train_one_epoch(model, epoch):
+    """Train the model for one epoch."""
+
     dataloader = get_dataloader(batch_size=4)
 
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
+    model.to(DEVICE)
     model.train()
 
     total_loss = 0.0
 
-    for images, masks in dataloader:
+    for batch_idx, (images, masks) in enumerate(dataloader):
+
+        images = images.to(DEVICE)
+        masks = masks.to(DEVICE)
 
         optimizer.zero_grad()
 
@@ -68,13 +86,22 @@ def train_one_epoch(model, epoch):
 
         total_loss += loss.item()
 
+        if batch_idx % 50 == 0:
+            print(
+                f"Batch [{batch_idx}/{len(dataloader)}] "
+                f"Loss: {loss.item():.4f}"
+            )
+
     avg_loss = total_loss / len(dataloader)
 
-    print(f"Training completed. Average Loss: {avg_loss:.4f}")
+    print(
+        f"\nEpoch {epoch} completed "
+        f"| Average Loss: {avg_loss:.4f}"
+    )
 
     checkpoint_path = os.path.join(
         CHECKPOINT_DIR,
-        f"unet_epoch_{epoch}.pth"
+        f"unet_epoch_{epoch}.pth",
     )
 
     torch.save(model.state_dict(), checkpoint_path)
@@ -83,9 +110,13 @@ def train_one_epoch(model, epoch):
 
 
 def train(model, num_epochs=5):
+    """Train the model for multiple epochs."""
+
     for epoch in range(1, num_epochs + 1):
 
-        print(f"\n========== Epoch {epoch}/{num_epochs} ==========")
+        print(
+            f"\n========== Epoch {epoch}/{num_epochs} =========="
+        )
 
         train_one_epoch(model, epoch)
 
@@ -94,15 +125,25 @@ def train(model, num_epochs=5):
 # Load Saved Model
 # ============================================================
 
+
 def load_trained_model(epoch=1):
+    """Load a saved checkpoint."""
+
     model = build_model()
 
     checkpoint_path = os.path.join(
         CHECKPOINT_DIR,
-        f"unet_epoch_{epoch}.pth"
+        f"unet_epoch_{epoch}.pth",
     )
 
-    model.load_state_dict(torch.load(checkpoint_path))
+    model.load_state_dict(
+        torch.load(
+            checkpoint_path,
+            map_location=DEVICE,
+        )
+    )
+
+    model.to(DEVICE)
 
     print(f"Loaded checkpoint: {checkpoint_path}")
 
@@ -113,10 +154,11 @@ def load_trained_model(epoch=1):
 # Flower Client
 # ============================================================
 
+
 class FedMedClient(fl.client.NumPyClient):
 
     def __init__(self):
-        self.model = build_model()
+        self.model = build_model().to(DEVICE)
 
     def get_parameters(self, config):
         print("Sending model parameters to server...")
@@ -142,9 +184,11 @@ class FedMedClient(fl.client.NumPyClient):
 
         set_parameters(self.model, parameters)
 
-        # Placeholder evaluation
-        loss = 0.0
-        accuracy = 0.0
+        self.model.eval()
+
+        with torch.no_grad():
+            loss = 0.0
+            accuracy = 0.0
 
         return (
             loss,
