@@ -1,16 +1,51 @@
 """
-Configuration for the FedMed Federated Learning Server.
-
-This module centralizes all configurable values so they can
-be changed from one place.
+Project Configuration
+FedMed - 3D Brain Tumor Segmentation
 """
 
-SERVER_ADDRESS = "127.0.0.1:8080"
+from pathlib import Path
 
-NUM_ROUNDS = 3
+# ============================================================
+# Dataset Configuration
+# ============================================================
 
-MIN_AVAILABLE_CLIENTS = 1
+# Update this path to your extracted BraTS dataset
+DATASET_ROOT = Path(
+    r"D:\fedmed data set\ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData"
+)
 
-PROJECT_NAME = "FedMed"
+# ============================================================
+# Image Configuration
+# ============================================================
 
-VERSION = "0.1.0"
+# Training patch size (we'll use patches instead of full volumes)
+IMAGE_SIZE = (128, 128, 128)
+
+# MRI modalities used
+MODALITIES = [
+    "t1c",
+    "t1n",
+    "t2f",
+    "t2w",
+]
+
+# ============================================================
+# DataLoader Configuration
+# ============================================================
+
+BATCH_SIZE = 1
+NUM_WORKERS = 2
+
+# ============================================================
+# Training Configuration
+# ============================================================
+
+LEARNING_RATE = 1e-4
+NUM_EPOCHS = 50
+
+# ============================================================
+# Checkpoints
+# ============================================================
+
+CHECKPOINT_DIR = Path("checkpoints")
+CHECKPOINT_DIR.mkdir(exist_ok=True)

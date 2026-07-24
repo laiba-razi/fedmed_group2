@@ -1,147 +1,245 @@
 """
-Dataset utilities for FedMed.
+FedMed - BraTS 2023 Dataset Loader
 
-This module prepares MRI image datasets for
-training and evaluation.
+Loads the BraTS 2023 MRI dataset for 3D brain tumor segmentation.
+
+Dataset Structure
+-----------------
+BraTS-GLI-00000-000/
+    ├── BraTS-GLI-00000-000-t1c.nii
+    ├── BraTS-GLI-00000-000-t1n.nii
+    ├── BraTS-GLI-00000-000-t2f.nii
+    ├── BraTS-GLI-00000-000-t2w.nii
+    └── BraTS-GLI-00000-000-seg.nii
 """
 
 from pathlib import Path
 
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
-from PIL import Image
+from monai.data import (
+    CacheDataset,
+    DataLoader,
+)
+from monai.transforms import (
+    Compose,
+    LoadImaged,
+    EnsureChannelFirstd,
+    NormalizeIntensityd,
+    RandCropByPosNegLabeld,
+    EnsureTyped,
+)
+
+from backend.federated.config import (
+    DATASET_ROOT,
+    IMAGE_SIZE,
+    BATCH_SIZE,
+    NUM_WORKERS,
+    MODALITIES,
+)
 
 
 # ============================================================
-# Dataset Configuration
+# Helper Functions
 # ============================================================
 
-DATASET_PATH = Path(r"D:\ibm internship data\kaggle_3m")
+def find_file(folder: Path, filename: str):
+    """
+    Finds either .nii or .nii.gz
+    """
 
-IMAGE_SIZE = 128
+    nii = folder / f"{filename}.nii"
+
+    if nii.exists():
+        return str(nii)
+
+    nii_gz = folder / f"{filename}.nii.gz"
+
+    if nii_gz.exists():
+        return str(nii_gz)
+
+    return None
 
 
 # ============================================================
-# Image Transformations
+# Dataset Discovery
 # ============================================================
 
-image_transform = transforms.Compose([
-    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-    transforms.ToTensor(),
-])
+def get_patient_files():
+    """
+    Creates a MONAI compatible dataset list.
 
-mask_transform = transforms.Compose([
-    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-    transforms.ToTensor(),
-])
+    Returns
+    -------
+    [
+        {
+            "image": [
+                t1c,
+                t1n,
+                t2f,
+                t2w
+            ],
+            "label": segmentation
+        }
+    ]
+    """
+
+    patients = []
+
+    patient_dirs = sorted(DATASET_ROOT.iterdir())
+
+    for patient_dir in patient_dirs:
+
+        if not patient_dir.is_dir():
+            continue
+
+        patient_id = patient_dir.name
+
+        image_paths = []
+
+        valid_patient = True
+
+        for modality in MODALITIES:
+
+            image = find_file(
+                patient_dir,
+                f"{patient_id}-{modality}"
+            )
+
+            if image is None:
+                valid_patient = False
+                break
+
+            image_paths.append(image)
+
+        label = find_file(
+            patient_dir,
+            f"{patient_id}-seg"
+        )
+
+        if label is None:
+            valid_patient = False
+
+        if valid_patient:
+
+            patients.append(
+                {
+                    "image": image_paths,
+                    "label": label,
+                }
+            )
+
+    print("=" * 50)
+    print("BraTS Dataset Discovery")
+    print("=" * 50)
+    print(f"Patients Found : {len(patients)}")
+
+    return patients
+
+
+# ============================================================
+# MONAI Transforms
+# ============================================================
+
+def get_train_transforms():
+
+    return Compose(
+
+        [
+
+            LoadImaged(
+                keys=["image", "label"]
+            ),
+
+            EnsureChannelFirstd(
+                keys=["image", "label"]
+            ),
+
+            NormalizeIntensityd(
+                keys="image",
+                nonzero=True,
+                channel_wise=True,
+            ),
+
+            RandCropByPosNegLabeld(
+                keys=["image", "label"],
+                label_key="label",
+                spatial_size=IMAGE_SIZE,
+                pos=1,
+                neg=1,
+                num_samples=1,
+                image_key="image",
+                image_threshold=0,
+            ),
+
+            EnsureTyped(
+                keys=["image", "label"]
+            ),
+
+        ]
+
+    )
 
 
 # ============================================================
 # Dataset
 # ============================================================
 
-class BrainTumorDataset(Dataset):
+def get_dataset():
 
-    def __init__(self, root_dir=DATASET_PATH):
+    data = get_patient_files()
 
-        self.samples = []
+    dataset = CacheDataset(
+        data=data,
+        transform=get_train_transforms(),
+        cache_rate=0.1,
+        num_workers=NUM_WORKERS,
+    )
 
-        root_dir = Path(root_dir)
-
-        print(f"Dataset Path: {root_dir}")
-        print(f"Exists: {root_dir.exists()}")
-
-        patient_count = 0
-
-        for patient_folder in root_dir.iterdir():
-
-            if not patient_folder.is_dir():
-                continue
-
-            patient_count += 1
-
-            
-
-            for image_path in patient_folder.glob("*.tif"):
-
-                
-
-                if image_path.name.endswith("_mask.tif"):
-                    continue
-
-                mask_path = image_path.with_name(
-                    image_path.stem + "_mask.tif"
-                )
-
-                if mask_path.exists():
-                    self.samples.append((image_path, mask_path))
-
-        print(f"Patients: {patient_count}")
-        print(f"Pairs: {len(self.samples)}")
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-
-        image_path, mask_path = self.samples[idx]
-
-        image = Image.open(image_path).convert("L")
-        mask = Image.open(mask_path).convert("L")
-
-        image = image_transform(image)
-        mask = mask_transform(mask)
-
-        return image, mask
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-
-        image_path, mask_path = self.samples[idx]
-
-        image = Image.open(image_path).convert("L")
-        mask = Image.open(mask_path).convert("L")
-
-        image = image_transform(image)
-        mask = mask_transform(mask)
-
-        return image, mask
+    return dataset
 
 
 # ============================================================
 # DataLoader
 # ============================================================
 
-def get_dataloader(batch_size=4):
+def get_dataloader():
 
-    dataset = BrainTumorDataset()
+    dataset = get_dataset()
 
-    return DataLoader(
+    loader = DataLoader(
+
         dataset,
-        batch_size=batch_size,
+
+        batch_size=BATCH_SIZE,
+
         shuffle=True,
+
+        num_workers=NUM_WORKERS,
+
     )
 
+    return loader
+
 
 # ============================================================
-# Test
+# Validation
 # ============================================================
-
-def test_dataset():
-
-    loader = get_dataloader(batch_size=4)
-
-    images, masks = next(iter(loader))
-
-    print("\n========== Dataset Validation ==========")
-    print(f"Dataset Size : {len(loader.dataset)}")
-    print(f"Images Shape : {images.shape}")
-    print(f"Masks Shape  : {masks.shape}")
-    print("Dataset is working correctly.")
-
 
 if __name__ == "__main__":
-    test_dataset()
+
+    loader = get_dataloader()
+
+    batch = next(iter(loader))
+
+    images = batch["image"]
+
+    labels = batch["label"]
+
+    print("=" * 50)
+    print("BraTS DataLoader Validation")
+    print("=" * 50)
+
+    print("Image Shape :", images.shape)
+    print("Label Shape :", labels.shape)
+
+    print("Image dtype :", images.dtype)
+    print("Label dtype :", labels.dtype)

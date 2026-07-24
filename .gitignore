@@ -1,18 +1,37 @@
-# Virtual environment
-.venv/
-
-# Python cache
+# ===============================
+# Python
+# ===============================
 __pycache__/
-*.py[cod]
+*.pyc
+*.pyo
+*.pyd
 
-# Environment variables
-.env
+# ===============================
+# Virtual Environment
+# ===============================
+.venv/
+venv/
 
+# ===============================
+# Datasets
+# ===============================
+BraTS/
+datasets/
+*.nii
+*.nii.gz
+
+# ===============================
+# Model Checkpoints
+# ===============================
+checkpoints/
+
+# ===============================
 # VS Code
+# ===============================
 .vscode/
 
-# macOS
+# ===============================
+# OS Files
+# ===============================
 .DS_Store
-
-checkpoints/
-*.pth
+Thumbs.db
