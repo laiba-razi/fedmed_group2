@@ -1,44 +1,64 @@
 """
-Brain Tumor Segmentation Model
-
-This module defines the neural network used for
-federated learning.
+FedMed - 3D U-Net Model
 """
+
+import torch
 
 from monai.networks.nets import UNet
 
+from backend.federated.config import (
+    IMAGE_SIZE,
+    IN_CHANNELS,
+    OUT_CHANNELS,
+)
 
-def build_model():
+
+def create_model():
     """
-    Create and return the segmentation model.
+    Create a 3D U-Net model for BraTS segmentation.
     """
 
     model = UNet(
-        spatial_dims=2,
-        in_channels=1,
-        out_channels=1,
-        channels=(16, 32, 64, 128),
-        strides=(2, 2, 2),
+        spatial_dims=3,
+        in_channels=IN_CHANNELS,
+        out_channels=OUT_CHANNELS,
+        channels=(16, 32, 64, 128, 256),
+        strides=(2, 2, 2, 2),
         num_res_units=2,
     )
 
     return model
-def test_model():
-    import torch
-
-    model = build_model()
-
-    dummy_input = torch.randn(1, 1, 128, 128)
-
-    output = model(dummy_input)
-
-    print("===================================")
-    print("FedMed Model Validation")
-    print("===================================")
-    print(f"Input Shape : {dummy_input.shape}")
-    print(f"Output Shape: {output.shape}")
-    print("Model validation completed successfully.")
 
 
 if __name__ == "__main__":
-    test_model()
+
+    model = create_model()
+
+    x = torch.randn(
+        1,
+        IN_CHANNELS,
+        *IMAGE_SIZE,
+    )
+
+    y = model(x)
+
+    print("=" * 50)
+    print("3D U-Net Validation")
+    print("=" * 50)
+
+    print(f"Input Shape  : {x.shape}")
+    print(f"Output Shape : {y.shape}")
+
+    total_params = sum(
+        p.numel()
+        for p in model.parameters()
+    )
+
+    trainable_params = sum(
+        p.numel()
+        for p in model.parameters()
+        if p.requires_grad
+    )
+
+    print(f"Total Parameters     : {total_params:,}")
+    print(f"Trainable Parameters : {trainable_params:,}")
