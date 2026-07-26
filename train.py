@@ -12,7 +12,7 @@ from monai.data import decollate_batch, Dataset, DataLoader
 # Assuming dataset.py is in the same directory
 from dataset import get_brats_data_files, get_train_transforms_aug, get_val_transforms
 
-def main(data_dir="brats", max_epochs=20, val_ratio=0.2, num_train_subset=20):
+def main(data_dir="brats", max_epochs=50, val_ratio=0.2, num_train_subset=800):
     # 1. Device Configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
