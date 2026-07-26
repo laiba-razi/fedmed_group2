@@ -1,24 +1,13 @@
 """
 FedMed - BraTS 2023 Dataset Loader
-
-Loads the BraTS 2023 MRI dataset for 3D brain tumor segmentation.
-
-Dataset Structure
------------------
-BraTS-GLI-00000-000/
-    ├── BraTS-GLI-00000-000-t1c.nii
-    ├── BraTS-GLI-00000-000-t1n.nii
-    ├── BraTS-GLI-00000-000-t2f.nii
-    ├── BraTS-GLI-00000-000-t2w.nii
-    └── BraTS-GLI-00000-000-seg.nii
 """
 
 from pathlib import Path
 
-from monai.data import (
-    CacheDataset,
-    DataLoader,
-)
+import torch
+from torch.utils.data import Subset
+
+from monai.data import CacheDataset, DataLoader
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -38,13 +27,10 @@ from backend.federated.config import (
 
 
 # ============================================================
-# Helper Functions
+# Helper
 # ============================================================
 
 def find_file(folder: Path, filename: str):
-    """
-    Finds either .nii or .nii.gz
-    """
 
     nii = folder / f"{filename}.nii"
 
@@ -64,23 +50,6 @@ def find_file(folder: Path, filename: str):
 # ============================================================
 
 def get_patient_files():
-    """
-    Creates a MONAI compatible dataset list.
-
-    Returns
-    -------
-    [
-        {
-            "image": [
-                t1c,
-                t1n,
-                t2f,
-                t2w
-            ],
-            "label": segmentation
-        }
-    ]
-    """
 
     patients = []
 
@@ -95,30 +64,30 @@ def get_patient_files():
 
         image_paths = []
 
-        valid_patient = True
+        valid = True
 
         for modality in MODALITIES:
 
-            image = find_file(
+            img = find_file(
                 patient_dir,
-                f"{patient_id}-{modality}"
+                f"{patient_id}-{modality}",
             )
 
-            if image is None:
-                valid_patient = False
+            if img is None:
+                valid = False
                 break
 
-            image_paths.append(image)
+            image_paths.append(img)
 
         label = find_file(
             patient_dir,
-            f"{patient_id}-seg"
+            f"{patient_id}-seg",
         )
 
         if label is None:
-            valid_patient = False
+            valid = False
 
-        if valid_patient:
+        if valid:
 
             patients.append(
                 {
@@ -127,30 +96,29 @@ def get_patient_files():
                 }
             )
 
-    print("=" * 50)
-    print("BraTS Dataset Discovery")
-    print("=" * 50)
-    print(f"Patients Found : {len(patients)}")
+    print("=" * 60)
+    print("BraTS Dataset")
+    print("=" * 60)
+    print("Patients :", len(patients))
 
     return patients
 
 
 # ============================================================
-# MONAI Transforms
+# Train Transform
 # ============================================================
 
 def get_train_transforms():
 
     return Compose(
-
         [
 
             LoadImaged(
-                keys=["image", "label"]
+                keys=["image", "label"],
             ),
 
             EnsureChannelFirstd(
-                keys=["image", "label"]
+                keys=["image", "label"],
             ),
 
             NormalizeIntensityd(
@@ -171,11 +139,51 @@ def get_train_transforms():
             ),
 
             EnsureTyped(
-                keys=["image", "label"]
+                keys=["image", "label"],
+            ),
+        ]
+    )
+
+
+# ============================================================
+# Validation Transform
+# ============================================================
+
+def get_val_transforms():
+
+    return Compose(
+        [
+
+            LoadImaged(
+                keys=["image", "label"],
             ),
 
-        ]
+            EnsureChannelFirstd(
+                keys=["image", "label"],
+            ),
 
+
+            RandCropByPosNegLabeld(
+                keys=["image", "label"],
+                label_key="label",
+                spatial_size=IMAGE_SIZE,
+                pos=1,
+                neg=1,
+                num_samples=1,
+                image_key="image",
+                image_threshold=0,
+            ),
+
+            NormalizeIntensityd(
+                keys="image",
+                nonzero=True,
+                channel_wise=True,
+            ),
+
+            EnsureTyped(
+                keys=["image", "label"],
+            ),
+        ]
     )
 
 
@@ -183,18 +191,41 @@ def get_train_transforms():
 # Dataset
 # ============================================================
 
-def get_dataset():
+def get_datasets():
 
     data = get_patient_files()
 
-    dataset = CacheDataset(
-        data=data,
+    train_size = int(0.8 * len(data))
+    val_size = len(data) - train_size
+
+    generator = torch.Generator().manual_seed(42)
+
+    indices = torch.randperm(len(data), generator=generator).tolist()
+
+    train_indices = indices[:train_size]
+    val_indices = indices[train_size:]
+
+    train_data = [data[i] for i in train_indices]
+    val_data = [data[i] for i in val_indices]
+
+    print(f"Training Patients   : {len(train_data)}")
+    print(f"Validation Patients : {len(val_data)}")
+
+    train_dataset = CacheDataset(
+        data=train_data,
         transform=get_train_transforms(),
         cache_rate=0.1,
         num_workers=NUM_WORKERS,
     )
 
-    return dataset
+    val_dataset = CacheDataset(
+        data=val_data,
+        transform=get_val_transforms(),
+        cache_rate=0.1,
+        num_workers=NUM_WORKERS,
+    )
+
+    return train_dataset, val_dataset
 
 
 # ============================================================
@@ -203,43 +234,38 @@ def get_dataset():
 
 def get_dataloader():
 
-    dataset = get_dataset()
+    train_dataset, val_dataset = get_datasets()
 
-    loader = DataLoader(
-
-        dataset,
-
+    train_loader = DataLoader(
+        train_dataset,
         batch_size=BATCH_SIZE,
-
         shuffle=True,
-
         num_workers=NUM_WORKERS,
-
     )
 
-    return loader
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        num_workers=NUM_WORKERS,
+    )
+
+    return train_loader, val_loader
 
 
 # ============================================================
-# Validation
+# Test
 # ============================================================
 
 if __name__ == "__main__":
 
-    loader = get_dataloader()
+    train_loader, val_loader = get_dataloader()
 
-    batch = next(iter(loader))
+    batch = next(iter(train_loader))
 
-    images = batch["image"]
+    print("=" * 60)
+    print("Training Batch")
+    print("=" * 60)
 
-    labels = batch["label"]
-
-    print("=" * 50)
-    print("BraTS DataLoader Validation")
-    print("=" * 50)
-
-    print("Image Shape :", images.shape)
-    print("Label Shape :", labels.shape)
-
-    print("Image dtype :", images.dtype)
-    print("Label dtype :", labels.dtype)
+    print(batch["image"].shape)
+    print(batch["label"].shape)

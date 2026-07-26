@@ -48,7 +48,7 @@ NUM_WORKERS = 2
 # ============================================================
 
 LEARNING_RATE = 1e-4
-NUM_EPOCHS = 50
+NUM_EPOCHS = 5
 
 # ============================================================
 # Checkpoints
@@ -68,3 +68,4 @@ DEVICE = "cuda"
 # ============================================================
 
 BEST_MODEL_NAME = "best_model.pth"
+BEST_MODEL_PATH = CHECKPOINT_DIR / BEST_MODEL_NAME
