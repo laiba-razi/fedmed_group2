@@ -16,7 +16,6 @@ from backend.federated.config import (
 from backend.federated.dataset import get_dataloader
 from backend.federated.model import create_model
 from backend.federated.losses import get_loss_function
-from backend.federated.metrics import get_dice_metric
 from backend.federated.metrics import (
     get_dice_metric,
     get_post_transforms,
@@ -280,7 +279,7 @@ def main():
             best_dice=best_dice,
         )
 
-        print(f"Train Loss : {train_loss:.4f}")
+        print(f"Train Loss : {train_loss}")
         print(f"Val Loss   : {val_loss:.4f}")
         print(f"Dice Score : {dice:.4f}")
         print(f"Best Dice  : {best_dice:.4f}")
