@@ -115,6 +115,11 @@ def train_one_epoch(
 
         optimizer.zero_grad()
 
+        print("=" * 40)
+        print("TRAIN BATCH")
+        print("Image:", images.shape)
+        print("Label:", labels.shape)
+
         outputs = model(images)
 
         loss = loss_function(outputs, labels)
@@ -162,6 +167,9 @@ def validate(
 
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
+
+            print(f"Image shape: {images.shape}")
+            print(f"Label shape: {labels.shape}")
 
             outputs = model(images)
 
@@ -222,6 +230,7 @@ def save_checkpoint(
         best_dice = dice
 
     return best_dice
+
 
 
 # ============================================================

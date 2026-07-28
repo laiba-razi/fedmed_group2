@@ -7,7 +7,8 @@ from pathlib import Path
 import torch
 from torch.utils.data import Subset
 
-from monai.data import CacheDataset, DataLoader
+from monai.data import CacheDataset
+from torch.utils.data import DataLoader
 from monai.transforms import (
     Compose,
     LoadImaged,
