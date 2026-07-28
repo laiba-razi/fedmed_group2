@@ -69,3 +69,23 @@ DEVICE = "cuda"
 
 BEST_MODEL_NAME = "best_model.pth"
 BEST_MODEL_PATH = CHECKPOINT_DIR / BEST_MODEL_NAME
+
+# ============================================================
+# Federated Learning Configuration (Flower)
+# ============================================================
+
+SERVER_ADDRESS = "127.0.0.1:8080"
+NUM_CLIENTS = 3
+NUM_ROUNDS = 5
+LOCAL_EPOCHS = 1
+MIN_AVAILABLE_CLIENTS = 3
+MIN_FIT_CLIENTS = 3
+MIN_EVALUATE_CLIENTS = 3
+RANDOM_SEED = 42
+
+PROJECT_NAME = "FedMed"
+VERSION = "1.0.0"
+
+METRICS_DIR = Path("logs")
+METRICS_DIR.mkdir(exist_ok=True)
+METRICS_FILE = METRICS_DIR / "fl_metrics.json"

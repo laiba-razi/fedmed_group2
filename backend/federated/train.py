@@ -85,6 +85,21 @@ def initialize():
     )
 
 
+def unpack_batch(batch, device):
+    """
+    Safely unpack images and labels from DataLoader batch dict or list of dicts.
+    """
+    if isinstance(batch, list):
+        images = torch.cat([b["image"] for b in batch], dim=0).to(device)
+        labels = torch.cat([b["label"] for b in batch], dim=0).to(device)
+    elif isinstance(batch, dict):
+        images = batch["image"].to(device)
+        labels = batch["label"].to(device)
+    else:
+        raise TypeError(f"Unexpected batch type: {type(batch)}")
+    return images, labels
+
+
 # ============================================================
 # Train
 # ============================================================
@@ -109,9 +124,7 @@ def train_one_epoch(
 
     for batch in progress:
 
-        images = batch["image"].to(device)
-        labels = batch["label"].to(device)
-        
+        images, labels = unpack_batch(batch, device)
 
         optimizer.zero_grad()
 
@@ -165,13 +178,13 @@ def validate(
             leave=False,
         ):
 
-            images = batch["image"].to(device)
-            labels = batch["label"].to(device)
+            images, labels = unpack_batch(batch, device)
 
             print(f"Image shape: {images.shape}")
             print(f"Label shape: {labels.shape}")
 
             outputs = model(images)
+
 
             loss = loss_function(outputs, labels)
 

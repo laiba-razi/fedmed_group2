@@ -230,6 +230,94 @@ def get_datasets():
 
 
 # ============================================================
+# Client Dataset Partitioning (Federated Learning)
+# ============================================================
+
+def partition_dataset(data: list, client_id: int, num_clients: int = 3, seed: int = 42) -> list:
+    """
+    Deterministically partition patient list across hospital nodes.
+    Guarantees no overlap, complete coverage, and equal partition sizes where possible.
+    """
+    if client_id < 0 or client_id >= num_clients:
+        raise ValueError(f"Invalid client_id {client_id} for num_clients={num_clients}")
+
+    generator = torch.Generator().manual_seed(seed)
+    shuffled_indices = torch.randperm(len(data), generator=generator).tolist()
+
+    total_samples = len(data)
+    chunk_size = total_samples // num_clients
+    remainder = total_samples % num_clients
+
+    start_idx = client_id * chunk_size + min(client_id, remainder)
+    end_idx = start_idx + chunk_size + (1 if client_id < remainder else 0)
+
+    client_indices = shuffled_indices[start_idx:end_idx]
+    return [data[i] for i in client_indices]
+
+
+def get_client_dataloader(
+    client_id: int,
+    num_clients: int = 3,
+    batch_size: int = BATCH_SIZE,
+    num_workers: int = NUM_WORKERS,
+    seed: int = 42,
+):
+    """
+    Returns (train_loader, val_loader) partitioned specifically for client_id.
+    """
+    all_patients = get_patient_files()
+    client_patients = partition_dataset(all_patients, client_id, num_clients, seed=seed)
+
+    train_size = int(0.8 * len(client_patients))
+
+    generator = torch.Generator().manual_seed(seed + client_id)
+    indices = torch.randperm(len(client_patients), generator=generator).tolist()
+
+    train_indices = indices[:train_size]
+    val_indices = indices[train_size:]
+
+    train_data = [client_patients[i] for i in train_indices]
+    val_data = [client_patients[i] for i in val_indices]
+
+    print("=" * 60)
+    print(f"Hospital Node {client_id+1}/{num_clients} Data Partition")
+    print("=" * 60)
+    print(f"Total Patients      : {len(client_patients)}")
+    print(f"Training Patients   : {len(train_data)}")
+    print(f"Validation Patients : {len(val_data)}")
+
+    train_dataset = CacheDataset(
+        data=train_data,
+        transform=get_train_transforms(),
+        cache_rate=0.1,
+        num_workers=num_workers,
+    )
+
+    val_dataset = CacheDataset(
+        data=val_data,
+        transform=get_val_transforms(),
+        cache_rate=0.1,
+        num_workers=num_workers,
+    )
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
+
+    return train_loader, val_loader
+
+
+# ============================================================
 # DataLoader
 # ============================================================
 
@@ -269,4 +357,4 @@ if __name__ == "__main__":
     print("=" * 60)
 
     print(batch["image"].shape)
-    print(batch["label"].shape)
+    print(batch["label"].shape)
