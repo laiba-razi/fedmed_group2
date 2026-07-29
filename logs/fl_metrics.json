@@ -1,36 +1,36 @@
 {
   "project": "FedMed",
   "num_rounds_completed": 5,
-  "best_dice_score": 0.6661578218142191,
+  "best_dice_score": 0.6988107760747274,
   "rounds": [
     {
       "round": 1,
-      "val_loss": 2.5792038440704346,
-      "dice_score": 0.0978650376200676,
+      "val_loss": 1.043869972229004,
+      "dice_score": 0.4502817193667094,
       "active_clients": 3
     },
     {
       "round": 2,
-      "val_loss": 1.1013835668563843,
-      "dice_score": 0.4903132418791453,
+      "val_loss": 0.7105964024861654,
+      "dice_score": 0.5428759256998698,
       "active_clients": 3
     },
     {
       "round": 3,
-      "val_loss": 0.7056567867596945,
-      "dice_score": 0.5637324452400208,
+      "val_loss": 0.5509525736172994,
+      "dice_score": 0.6604973475138346,
       "active_clients": 3
     },
     {
       "round": 4,
-      "val_loss": 0.5261001586914062,
-      "dice_score": 0.6661578218142191,
+      "val_loss": 0.4551258285840352,
+      "dice_score": 0.6988107760747274,
       "active_clients": 3
     },
     {
       "round": 5,
-      "val_loss": 0.43309691548347473,
-      "dice_score": 0.715600868066152,
+      "val_loss": 0.3943459788958232,
+      "dice_score": 0.7346757253011068,
       "active_clients": 3
     }
   ]
