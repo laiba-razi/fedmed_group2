@@ -28,24 +28,26 @@ def main():
     parser = argparse.ArgumentParser(description="FedMed Flower Central Server")
     parser.add_argument("--server-address", type=str, default=SERVER_ADDRESS, help="Server gRPC listen address")
     parser.add_argument("--num-rounds", type=int, default=NUM_ROUNDS, help="Number of FL training rounds")
-    parser.add_argument("--min-clients", type=int, default=MIN_AVAILABLE_CLIENTS, help="Minimum connected clients required")
+    parser.add_argument("--min-available-clients", type=int, default=MIN_AVAILABLE_CLIENTS, help="Minimum available clients required")
+    parser.add_argument("--min-fit-clients", type=int, default=MIN_FIT_CLIENTS, help="Minimum fit clients required")
     args = parser.parse_args()
 
     logger.info("=" * 60)
     logger.info(f"{PROJECT_NAME} Federated Learning Central Server")
-    logger.info(f"Version : {VERSION}")
-    logger.info(f"Address : {args.server_address}")
-    logger.info(f"Rounds  : {args.num_rounds}")
-    logger.info(f"Clients : {args.min_clients}")
+    logger.info(f"Version            : {VERSION}")
+    logger.info(f"Address            : {args.server_address}")
+    logger.info(f"Rounds             : {args.num_rounds}")
+    logger.info(f"Available Clients  : {args.min_available_clients}")
+    logger.info(f"Min Fit Clients    : {args.min_fit_clients}")
     logger.info("=" * 60)
 
     # Initialize custom FedMed strategy
     strategy = FedMedStrategy(
         fraction_fit=1.0,
-        fraction_evaluate=1.0,
-        min_fit_clients=args.min_clients,
-        min_evaluate_clients=args.min_clients,
-        min_available_clients=args.min_clients,
+        fraction_evaluate=0.0,
+        min_fit_clients=args.min_fit_clients,
+        min_evaluate_clients=1,
+        min_available_clients=args.min_available_clients,
     )
 
     # Launch Flower gRPC server

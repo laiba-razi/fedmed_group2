@@ -45,8 +45,10 @@ def launch_simulation(num_clients: int = 3, num_rounds: int = 5, local_epochs: i
             "backend.federated.server",
             "--num-rounds",
             str(num_rounds),
-            "--min-clients",
+            "--min-available-clients",
             str(num_clients),
+            "--min-fit-clients",
+            "2",
         ]
         logger.info("Starting Flower Server process...")
         server_process = subprocess.Popen(server_cmd, cwd=str(PROJECT_ROOT))
