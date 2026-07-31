@@ -101,6 +101,18 @@ class FedMedStrategy(fl.server.strategy.FedAvg):
             metrics["train_loss"] = weighted_train_loss
             logger.info(f"Round {server_round} Aggregated Train Loss: {weighted_train_loss:.4f}")
 
+            # Record live round metrics and write JSON
+            round_entry = {
+                "round": server_round,
+                "train_loss": float(weighted_train_loss),
+                "active_clients": len(results),
+            }
+
+            # Update or replace history for this round
+            self.history = [h for h in self.history if h.get("round") != server_round]
+            self.history.append(round_entry)
+            self._export_metrics_json()
+
         return aggregated_parameters, metrics
 
     def aggregate_evaluate(
