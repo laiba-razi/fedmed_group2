@@ -10,9 +10,7 @@ from pathlib import Path
 # ============================================================
 
 # Update this path to your extracted BraTS dataset
-DATASET_ROOT = Path(
-    r"D:\fedmed data set\ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData"
-)
+DATASET_ROOT = Path(__file__).parent.parent.parent / "datasets" / "synthetic_brats"
 
 # ============================================================
 # Image Configuration
@@ -79,8 +77,8 @@ NUM_CLIENTS = 3
 NUM_ROUNDS = 5
 LOCAL_EPOCHS = 1
 MIN_AVAILABLE_CLIENTS = 3
-MIN_FIT_CLIENTS = 3
-MIN_EVALUATE_CLIENTS = 3
+MIN_FIT_CLIENTS = 2
+MIN_EVALUATE_CLIENTS = 2
 RANDOM_SEED = 42
 
 PROJECT_NAME = "FedMed"

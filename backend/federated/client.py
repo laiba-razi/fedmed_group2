@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple
 
 import flwr as fl
 import numpy as np
+from pathlib import Path
 import torch
 import torch.nn as nn
 from monai.data import decollate_batch
@@ -211,9 +212,14 @@ def main():
 
     logger.info(f"Starting Flower NumPy Client for Hospital Node {args.client_id + 1} connecting to {args.server_address}...")
 
+    # Load Root CA Certificate
+    certs_dir = Path(__file__).parent.parent / "privacy" / ".certs"
+    root_cert = (certs_dir / "ca.crt").read_bytes()
+
     fl.client.start_numpy_client(
         server_address=args.server_address,
         client=client,
+        root_certificates=root_cert,
     )
 
 

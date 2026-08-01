@@ -125,6 +125,9 @@ python -m backend.federated.train
 
 ## 🧪 Testing & Verification
 
+We have a comprehensive test suite to verify the security, node resilience, and architectural correctness of the pipeline.
+
+### Integration Tests
 Run the federated integration test suite to verify dataset zero-overlap partitioning, parameter serialization, and FedMedStrategy checkpointing:
 
 ```bash
@@ -140,6 +143,12 @@ OK
 [PASS] Test 2 Passed: Model Parameter Serialization & Deserialization Verified.
 [PASS] Test 3 Passed: FedMedStrategy Aggregation & Checkpoint Export Verified.
 ```
+
+### Security & Resilience Tests
+For the mid-project review, we have prepared detailed guides to physically prove the TLS security and fault tolerance of the architecture:
+
+- [Test 1: TLS Secure Communication](tests/test_tls_security.md)
+- [Test 2: Node Resilience (Fault Tolerance)](tests/test_node_resilience.md)
 
 ---
 
