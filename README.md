@@ -10,11 +10,7 @@ FedMed is a final-year project demonstrating cross-silo federated learning for 3
 
 ### Screenshots
 
-Run the application locally and add screenshots here before final submission:
-
-| Home | FL dashboard |
-| --- | --- |
-| ![FedMed home](assets/home.png) | ![FedMed dashboard](assets/dashboard.png) |
+Capture the **Home** and **Federated learning dashboard** views from the deployed app and add them to the final report. The UI is intentionally not shown with patient imagery in the public repository.
 
 ## Installation
 
