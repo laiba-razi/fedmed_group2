@@ -27,14 +27,19 @@ export default function DnaCanvas() {
     container.appendChild(renderer.domElement);
 
     // 4. Group for DNA Helix
+    // Group for DNA Helix Container (Outer: Tilt & Position)
     const dnaGroup = new THREE.Group();
     scene.add(dnaGroup);
 
+    // Sub-group for DNA Mesh (Inner: Pure Axial Spin around central core)
+    const helixMeshGroup = new THREE.Group();
+    dnaGroup.add(helixMeshGroup);
+
     // Build DNA Geometry
-    const numPairs = 36;
-    const helixRadius = 2.4;
-    const helixHeight = 22;
-    const pitch = 0.4;
+    const numPairs = 48;
+    const helixRadius = 2.2;
+    const helixHeight = 32;
+    const pitch = 0.35;
 
     // Silver/Platinum Backbone Material
     const strandMaterial = new THREE.MeshStandardMaterial({
@@ -42,7 +47,7 @@ export default function DnaCanvas() {
       metalness: 0.9,
       roughness: 0.2,
       emissive: 0x475569,
-      emissiveIntensity: 0.2,
+      emissiveIntensity: 0.25,
     });
 
     // Cyan Base Pair Material
@@ -51,7 +56,7 @@ export default function DnaCanvas() {
       metalness: 0.5,
       roughness: 0.3,
       emissive: 0x06B6D4,
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.7,
     });
 
     // Violet Base Pair Material
@@ -60,11 +65,11 @@ export default function DnaCanvas() {
       metalness: 0.5,
       roughness: 0.3,
       emissive: 0x8B5CF6,
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.7,
     });
 
-    const sphereGeo = new THREE.SphereGeometry(0.22, 16, 16);
-    const cylinderGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 12);
+    const sphereGeo = new THREE.SphereGeometry(0.24, 16, 16);
+    const cylinderGeo = new THREE.CylinderGeometry(0.09, 0.09, 1, 12);
 
     for (let i = 0; i < numPairs; i++) {
       const t = (i / numPairs) * helixHeight - helixHeight / 2;
@@ -79,12 +84,12 @@ export default function DnaCanvas() {
       // Strand 1 Node
       const node1 = new THREE.Mesh(sphereGeo, strandMaterial);
       node1.position.set(x1, t, z1);
-      dnaGroup.add(node1);
+      helixMeshGroup.add(node1);
 
       // Strand 2 Node
       const node2 = new THREE.Mesh(sphereGeo, strandMaterial);
       node2.position.set(x2, t, z2);
-      dnaGroup.add(node2);
+      helixMeshGroup.add(node2);
 
       // Connecting Base Pair Rod
       const rMat = i % 2 === 0 ? cyanMaterial : violetMaterial;
@@ -97,17 +102,17 @@ export default function DnaCanvas() {
       const direction = new THREE.Vector3(x2 - x1, 0, z2 - z1).normalize();
       rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
 
-      dnaGroup.add(rod);
+      helixMeshGroup.add(rod);
     }
 
     // 5. Particle Dust Field
-    const particleCount = 200;
+    const particleCount = 250;
     const particleGeo = new THREE.BufferGeometry();
     const particlePos = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount * 3; i += 3) {
-      particlePos[i] = (Math.random() - 0.5) * 30;
-      particlePos[i + 1] = (Math.random() - 0.5) * 30;
+      particlePos[i] = (Math.random() - 0.5) * 35;
+      particlePos[i + 1] = (Math.random() - 0.5) * 35;
       particlePos[i + 2] = (Math.random() - 0.5) * 20;
     }
 
@@ -115,55 +120,45 @@ export default function DnaCanvas() {
 
     const particleMat = new THREE.PointsMaterial({
       color: 0xCBD5E1,
-      size: 0.08,
+      size: 0.09,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.65,
     });
 
     const particles = new THREE.Points(particleGeo, particleMat);
     scene.add(particles);
 
     // 6. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0x06B6D4, 2);
+    const dirLight1 = new THREE.DirectionalLight(0x06B6D4, 2.5);
     dirLight1.position.set(10, 10, 10);
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x8B5CF6, 2);
+    const dirLight2 = new THREE.DirectionalLight(0x8B5CF6, 2.5);
     dirLight2.position.set(-10, -10, -10);
     scene.add(dirLight2);
 
-    const pointLight = new THREE.PointLight(0xFFFFFF, 1.5, 30);
+    const pointLight = new THREE.PointLight(0xFFFFFF, 1.8, 35);
     pointLight.position.set(0, 0, 10);
     scene.add(pointLight);
 
     // 7. Scroll-driven animation state
-    let targetRotationZ = -0.55; // Slope at top (bottom-left to top-right)
-    let targetX = 4.5;            // Shifted right at top
-    let targetY = 0;
-    let targetRotationY = 0;
+    // Initial slope: -0.92 radians (-53 deg) lies along diagonal from bottom-left to top-right at top of page
+    let targetRotationZ = -0.92;
+    let scrollYOffset = 0;
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollProgress = Math.min(Math.max(scrollY / (maxScroll || 1), 0), 1);
+      const heroHeight = window.innerHeight * 0.8;
+      
+      // Calculate scroll progress through hero section (0 to 1)
+      const heroProgress = Math.min(Math.max(scrollY / heroHeight, 0), 1);
 
-      // Interpolate slope position from bottom-left->top-right (top) to center (mid) to vertical (bottom)
-      if (scrollProgress < 0.5) {
-        // Upper section: Move from right slope towards center
-        const p = scrollProgress / 0.5;
-        targetX = THREE.MathUtils.lerp(4.5, 0, p);
-        targetRotationZ = THREE.MathUtils.lerp(-0.55, -0.2, p);
-      } else {
-        // Lower section: Center to vertical alignment
-        const p = (scrollProgress - 0.5) / 0.5;
-        targetX = THREE.MathUtils.lerp(0, -3.5, p);
-        targetRotationZ = THREE.MathUtils.lerp(-0.2, 0.35, p);
-      }
-
-      targetRotationY = scrollProgress * Math.PI * 4;
+      // Transition Z tilt from diagonal (-0.92 rad) at top to vertical (0.0 rad) when scrolled down
+      targetRotationZ = THREE.MathUtils.lerp(-0.92, 0.0, heroProgress);
+      scrollYOffset = scrollY * 0.0025;
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -186,18 +181,17 @@ export default function DnaCanvas() {
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Continuous rotation
-      dnaGroup.rotation.y = elapsedTime * 0.4 + targetRotationY;
+      // Pure Local Axial Spin: inner mesh spins strictly around its central core longitudinal axis (local Y-axis)
+      helixMeshGroup.rotation.y = elapsedTime * 0.6 + scrollYOffset;
 
-      // Smooth lerp positioning on scroll
-      dnaGroup.position.x = THREE.MathUtils.lerp(dnaGroup.position.x, targetX, 0.05);
-      dnaGroup.rotation.z = THREE.MathUtils.lerp(dnaGroup.rotation.z, targetRotationZ, 0.05);
+      // Outer container lerps parent Z-tilt from diagonal slope (top) to vertical (middle/bottom)
+      dnaGroup.rotation.z = THREE.MathUtils.lerp(dnaGroup.rotation.z, targetRotationZ, 0.08);
 
-      // Gentle floating motion
-      dnaGroup.position.y = Math.sin(elapsedTime * 0.8) * 0.3;
+      // Keep position fixed at screen center (no translation across screen)
+      dnaGroup.position.set(0, 0, 0);
 
       // Rotate particle background slightly
-      particles.rotation.y = elapsedTime * 0.05;
+      particles.rotation.y = elapsedTime * 0.04;
 
       renderer.render(scene, camera);
     };
