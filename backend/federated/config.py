@@ -3,16 +3,16 @@ Project Configuration
 FedMed - 3D Brain Tumor Segmentation
 """
 
+import os
 from pathlib import Path
 
 # ============================================================
 # Dataset Configuration
 # ============================================================
 
-# Update this path to your extracted BraTS dataset
-DATASET_ROOT = Path(
-    r"D:\fedmed data set\ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData"
-)
+# Set FEDMED_DATASET_ROOT to the directory containing the extracted BraTS data.
+# The relative default keeps the project portable for local and Streamlit deployments.
+DATASET_ROOT = Path(os.getenv("FEDMED_DATASET_ROOT", "datasets/BraTS2023"))
 
 # ============================================================
 # Image Configuration
@@ -88,4 +88,4 @@ VERSION = "1.0.0"
 
 METRICS_DIR = Path("logs")
 METRICS_DIR.mkdir(exist_ok=True)
-METRICS_FILE = METRICS_DIR / "fl_metrics.json"
+METRICS_FILE = METRICS_DIR / "fl_metrics.json"
