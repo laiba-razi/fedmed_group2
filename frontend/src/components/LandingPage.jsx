@@ -1,37 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   Lock, 
   Activity, 
   Upload, 
   Cpu, 
-  FileCheck, 
   CheckCircle2, 
   ArrowRight, 
   Layers, 
   ChevronDown, 
   Server, 
   Brain, 
-  Heart, 
   Database,
   Sparkles,
-  Zap
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 
 export default function LandingPage({ setActiveTab }) {
   const [openFaq, setOpenFaq] = useState(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const toggleFaq = (idx) => {
     setOpenFaq(openFaq === idx ? null : idx);
   };
 
+  // Scroll Progress Listener for Central Glowing Timeline
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const currentScroll = window.scrollY;
+      const progress = Math.min(1, Math.max(0, currentScroll / (totalHeight || 1)));
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div className="relative z-10 min-h-screen text-slate-200 pt-28 pb-20 px-6 max-w-7xl mx-auto space-y-32">
+    <div className="relative z-10 min-h-screen text-slate-200 pt-28 pb-24 px-6 max-w-7xl mx-auto space-y-48">
+
+      {/* ============================================================ */}
+      {/* CENTRAL GLOWING TIMELINE AXIS LINE                           */}
+      {/* ============================================================ */}
+      <div className="absolute top-[85vh] bottom-[250px] left-1/2 -translate-x-1/2 w-[2px] pointer-events-none hidden md:block z-0">
+        
+        {/* Track Line */}
+        <div className="w-full h-full bg-slate-800/40 border-r border-cyan-900/30"></div>
+        
+        {/* Active Glowing Scroll Fill */}
+        <div 
+          className="absolute top-0 left-0 w-full bg-gradient-to-b from-cyan-400 via-emerald-400 to-violet-400 shadow-[0_0_15px_#06b6d4] transition-all duration-75"
+          style={{ height: `${scrollProgress * 100}%` }}
+        />
+
+        {/* Glowing Head Pulse Orb */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-cyan-300 border-2 border-slate-950 shadow-[0_0_20px_#06b6d4] transition-all duration-75"
+          style={{ top: `${scrollProgress * 100}%` }}
+        >
+          <div className="w-full h-full rounded-full bg-cyan-400 animate-ping opacity-75"></div>
+        </div>
+
+      </div>
+
 
       {/* ============================================================ */}
       {/* 1. HERO SECTION (Above the Fold)                              */}
       {/* ============================================================ */}
-      <section id="hero" className="min-h-[85vh] flex flex-col justify-center items-start pt-8">
+      <section id="hero" className="min-h-[85vh] flex flex-col justify-center items-start pt-4 relative z-10">
         <div className="grid lg:grid-cols-12 gap-12 items-center w-full">
           
           {/* Left Column: Headlines & Primary CTA */}
@@ -111,10 +150,8 @@ export default function LandingPage({ setActiveTab }) {
 
               {/* MRI Processing Preview Box */}
               <div className="relative aspect-video rounded-xl bg-slate-950 border border-slate-800/90 overflow-hidden flex items-center justify-center group">
-                {/* Simulated Grid Overlay */}
                 <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
                 
-                {/* Brain Graphic Placeholder */}
                 <div className="relative z-10 flex flex-col items-center gap-2 text-center p-6">
                   <Brain className="w-16 h-16 text-cyan-400 animate-pulse" />
                   <div className="text-xs font-mono text-slate-300">
@@ -125,7 +162,6 @@ export default function LandingPage({ setActiveTab }) {
                   </div>
                 </div>
 
-                {/* Simulated Tumor Mask Highlight Overlay */}
                 <div className="absolute top-1/3 left-1/3 w-20 h-16 rounded-full bg-cyan-500/20 border border-cyan-400/60 blur-sm pointer-events-none"></div>
               </div>
 
@@ -150,78 +186,58 @@ export default function LandingPage({ setActiveTab }) {
 
       {/* ============================================================ */}
       {/* 2. THE PROBLEM & SOLUTION SECTION                             */}
+      {/* SINGLE UNIFIED CARD ON RIGHT SIDE                            */}
       {/* ============================================================ */}
-      <section id="problem-solution" className="space-y-12">
-        
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 border border-slate-700 text-xs text-slate-300">
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Problem vs. Solution</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-silver-gradient">
-            Overcoming Data Barriers in Clinical AI
-          </h2>
-          <p className="text-slate-400 text-base">
-            Why traditional cloud-based AI fails in modern healthcare, and how local federated learning solves it.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 items-stretch">
+      <section id="problem-solution" className="relative z-10">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
           
-          {/* The Challenge (Pain Point) */}
-          <div className="glass-card p-8 border-red-900/30 hover:border-red-700/50 space-y-6 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-red-950/60 border border-red-800/60 flex items-center justify-center text-red-400">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-100">The Challenge: Data Privacy Deadlocks</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Strict HIPAA and GDPR regulatory mandates strictly prohibit uploading sensitive patient MRI scans to public cloud servers. As a result, hospitals remain isolated in data silos, and clinical AI research stalls due to limited local dataset size.
-              </p>
+          {/* Left spacer so single card sits on RIGHT side of central DNA */}
+          <div className="hidden md:block"></div>
+
+          {/* Unified Section Card (RIGHT) */}
+          <div className="glass-card p-8 border-slate-700/80 space-y-6 relative shadow-2xl backdrop-blur-xl bg-black/80">
+            
+            {/* Horizontal Branch Connector Line to Central Timeline */}
+            <div className="absolute top-12 -left-12 w-12 h-[2px] bg-gradient-to-r from-cyan-400 to-slate-800 hidden md:block">
+              <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-cyan-400 border border-slate-900 shadow-[0_0_10px_#06b6d4]"></div>
             </div>
 
-            <div className="space-y-3 pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-              <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                <span>Forbidden central cloud file pooling</span>
+            {/* Header Badge & Title */}
+            <div className="space-y-2 border-b border-slate-800 pb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
+                <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Problem vs. Solution</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                <span>Model overfitting on small local datasets</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                <span>High risk of patient data breach fines</span>
-              </div>
-            </div>
-          </div>
-
-          {/* The Solution */}
-          <div className="glass-card p-8 border-cyan-900/30 hover:border-cyan-700/50 space-y-6 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-cyan-950/60 border border-cyan-800/60 flex items-center justify-center text-cyan-400">
-                <Cpu className="w-6 h-6" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-100">The Solution: Local Federated Training</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                FedMed brings the deep learning model to the clinical data. PyTorch MONAI 3D U-Net models train directly on local hospital GPUs. Only encrypted parameter weight updates are sent to the central aggregator via Flower FedAvg.
-              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-silver-gradient">
+                Overcoming Data Barriers in Clinical AI
+              </h2>
             </div>
 
-            <div className="space-y-3 pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Zero raw MRI data leaves the hospital firewall</span>
+            {/* Concise 2-Line Challenge & Solution Details */}
+            <div className="space-y-4 text-xs sm:text-sm">
+              {/* Challenge (2 lines max) */}
+              <div className="p-4 rounded-xl bg-red-950/30 border border-red-900/40 space-y-1.5">
+                <div className="flex items-center gap-2 font-semibold text-red-400">
+                  <Lock className="w-4 h-4" />
+                  <span>The Challenge: Data Privacy Deadlocks</span>
+                </div>
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  Strict HIPAA/GDPR rules forbid central cloud patient data pooling, isolating hospital silos and restricting dataset size.
+                </p>
               </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>TenSEAL CKKS Homomorphic Encryption tensor aggregation</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Collaborative multi-hospital model accuracy</span>
+
+              {/* Solution (2 lines max) */}
+              <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-900/40 space-y-1.5">
+                <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                  <Cpu className="w-4 h-4" />
+                  <span>The Solution: Local Federated Training</span>
+                </div>
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  PyTorch MONAI 3D U-Net trains locally on hospital GPUs, transmitting only encrypted weight updates via Flower FedAvg.
+                </p>
               </div>
             </div>
+
           </div>
 
         </div>
@@ -229,69 +245,62 @@ export default function LandingPage({ setActiveTab }) {
 
 
       {/* ============================================================ */}
-      {/* 3. HOW IT WORKS (Step-by-Step Flow)                           */}
+      {/* 3. HOW IT WORKS SECTION                                       */}
+      {/* SINGLE UNIFIED CARD ON LEFT SIDE                             */}
       {/* ============================================================ */}
-      <section id="how-it-works" className="space-y-16">
-        
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 border border-slate-700 text-xs text-slate-300">
-            <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            <span>3-Step Clinical Workflow</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-silver-gradient">
-            How FedMed Operates
-          </h2>
-          <p className="text-slate-400 text-base">
-            From raw DICOM files to immediate diagnostic insights in three seamless steps.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
+      <section id="how-it-works" className="relative z-10">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
           
-          {/* Step 1 */}
-          <div className="glass-card p-8 space-y-5 border-slate-700/80 relative">
-            <div className="w-10 h-10 rounded-lg bg-cyan-950 border border-cyan-800 font-mono font-bold text-cyan-400 flex items-center justify-center text-lg">
-              01
+          {/* Unified Section Card (LEFT) */}
+          <div className="glass-card p-8 border-slate-700/80 space-y-6 relative shadow-2xl backdrop-blur-xl bg-black/80">
+            
+            {/* Horizontal Branch Connector Line to Central Timeline */}
+            <div className="absolute top-12 -right-12 w-12 h-[2px] bg-gradient-to-l from-emerald-400 to-slate-800 hidden md:block">
+              <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400 border border-slate-900 shadow-[0_0_10px_#10b981]"></div>
             </div>
-            <h3 className="text-xl font-bold text-slate-100">Step 1: Upload Data</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Radiologists or researchers drop anonymized MRI files (<code className="text-cyan-400 font-mono">.dcm</code>, <code className="text-cyan-400 font-mono">.nii.gz</code>) into the web interface or automated hospital PACS folder.
-            </p>
-            <div className="pt-2 text-xs text-slate-500 flex items-center gap-1.5">
-              <Upload className="w-4 h-4 text-slate-400" />
-              <span>Instant DICOM parsing</span>
+
+            {/* Header Badge & Title */}
+            <div className="space-y-2 border-b border-slate-800 pb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
+                <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                <span>3-Step Clinical Workflow</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-silver-gradient">
+                How FedMed Operates
+              </h2>
             </div>
+
+            {/* Concise 3 Steps (2 lines max each) */}
+            <div className="space-y-3 text-xs sm:text-sm">
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-start gap-3">
+                <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 font-mono font-bold text-xs">01</span>
+                <div>
+                  <div className="font-semibold text-slate-200">Upload Data</div>
+                  <p className="text-slate-400 text-xs leading-relaxed">Drop anonymized DICOM (<code className="text-cyan-400 font-mono">.dcm</code>, <code className="text-cyan-400 font-mono">.nii.gz</code>) files into the local web UI.</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-start gap-3">
+                <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono font-bold text-xs">02</span>
+                <div>
+                  <div className="font-semibold text-slate-200">Local GPU Training</div>
+                  <p className="text-slate-400 text-xs leading-relaxed">PyTorch MONAI 3D U-Net trains strictly on local hospital GPU firewalls.</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-start gap-3">
+                <span className="px-2 py-0.5 rounded bg-violet-950 text-violet-400 font-mono font-bold text-xs">03</span>
+                <div>
+                  <div className="font-semibold text-slate-200">Instant Diagnostics</div>
+                  <p className="text-slate-400 text-xs leading-relaxed">Generates real-time 3D tumor segmentation overlays (WT, TC, ET) on screen.</p>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          {/* Step 2 */}
-          <div className="glass-card p-8 space-y-5 border-slate-700/80 relative">
-            <div className="w-10 h-10 rounded-lg bg-emerald-950 border border-emerald-800 font-mono font-bold text-emerald-400 flex items-center justify-center text-lg">
-              02
-            </div>
-            <h3 className="text-xl font-bold text-slate-100">Step 2: Local Processing</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Model training and inferencing execute on local hospital GPUs (edge computing). Data strictly remains inside your hospital network perimeter.
-            </p>
-            <div className="pt-2 text-xs text-slate-500 flex items-center gap-1.5">
-              <Server className="w-4 h-4 text-slate-400" />
-              <span>Isolated local runtime</span>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className="glass-card p-8 space-y-5 border-slate-700/80 relative">
-            <div className="w-10 h-10 rounded-lg bg-violet-950 border border-violet-800 font-mono font-bold text-violet-400 flex items-center justify-center text-lg">
-              03
-            </div>
-            <h3 className="text-xl font-bold text-slate-100">Step 3: Instant Diagnostics</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              The trained model produces immediate, actionable tumor segmentation masks (WT, TC, ET) and anomaly metrics directly on the clinician’s screen.
-            </p>
-            <div className="pt-2 text-xs text-slate-500 flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-slate-400" />
-              <span>Real-time segmentation overlay</span>
-            </div>
-          </div>
+          {/* Right spacer */}
+          <div className="hidden md:block"></div>
 
         </div>
       </section>
@@ -299,55 +308,66 @@ export default function LandingPage({ setActiveTab }) {
 
       {/* ============================================================ */}
       {/* 4. CORE FEATURES & CAPABILITIES                               */}
+      {/* SINGLE UNIFIED CARD ON RIGHT SIDE                            */}
       {/* ============================================================ */}
-      <section id="features" className="space-y-16">
-        
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 border border-slate-700 text-xs text-slate-300">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Platform Capabilities</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-silver-gradient">
-            Built for Clinical Security & Speed
-          </h2>
-          <p className="text-slate-400 text-base">
-            Enterprise capabilities tailored specifically for medical imaging and hospital infrastructure.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
+      <section id="features" className="relative z-10">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
           
-          {/* Feature 1: Zero-Trust Security */}
-          <div className="glass-card p-8 space-y-4 border-slate-700/80">
-            <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-800 flex items-center justify-center text-cyan-400">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-100">Zero-Trust Security</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              End-to-end encryption using TenSEAL CKKS Homomorphic Encryption and Differential Privacy noise addition guarantee protection against model inversion attacks.
-            </p>
-          </div>
+          {/* Left spacer */}
+          <div className="hidden md:block"></div>
 
-          {/* Feature 2: High Model Accuracy */}
-          <div className="glass-card p-8 space-y-4 border-slate-700/80">
-            <div className="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400">
-              <Brain className="w-6 h-6" />
+          {/* Unified Section Card (RIGHT) */}
+          <div className="glass-card p-8 border-slate-700/80 space-y-6 relative shadow-2xl backdrop-blur-xl bg-black/80">
+            
+            {/* Horizontal Branch Connector Line to Central Timeline */}
+            <div className="absolute top-12 -left-12 w-12 h-[2px] bg-gradient-to-r from-violet-400 to-slate-800 hidden md:block">
+              <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-violet-400 border border-slate-900 shadow-[0_0_10px_#8b5cf6]"></div>
             </div>
-            <h3 className="text-xl font-bold text-slate-100">High Model Accuracy</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Powered by PyTorch & MONAI 3D U-Net architecture. Proven 73.5%+ Dice score convergence supporting Brain, Spine, and Cardiac MRI scans.
-            </p>
-          </div>
 
-          {/* Feature 3: PACS & DICOM Integration */}
-          <div className="glass-card p-8 space-y-4 border-slate-700/80">
-            <div className="w-12 h-12 rounded-xl bg-violet-950/80 border border-violet-800 flex items-center justify-center text-violet-400">
-              <Database className="w-6 h-6" />
+            {/* Header Badge & Title */}
+            <div className="space-y-2 border-b border-slate-800 pb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
+                <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                <span>Platform Capabilities</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-silver-gradient">
+                Built for Clinical Security & Speed
+              </h2>
             </div>
-            <h3 className="text-xl font-bold text-slate-100">PACS & DICOM Integration</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Seamlessly connects with standard hospital PACS (Picture Archiving and Communication Systems) and parses multi-sequence DICOM and NIfTI medical formats.
-            </p>
+
+            {/* Concise Feature Bullets */}
+            <div className="space-y-3 text-xs sm:text-sm">
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div className="flex items-center gap-2 font-semibold text-cyan-400">
+                  <Lock className="w-4 h-4" />
+                  <span>Zero-Trust Security</span>
+                </div>
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  TenSEAL CKKS Homomorphic Encryption & Differential Privacy guard against model inversion.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                  <Brain className="w-4 h-4" />
+                  <span>High Model Accuracy</span>
+                </div>
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  Proven 73.5%+ Dice score accuracy supporting Brain, Spine, and Cardiac MRI scans.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                <div className="flex items-center gap-2 font-semibold text-violet-400">
+                  <Database className="w-4 h-4" />
+                  <span>PACS & DICOM Native</span>
+                </div>
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  Seamless DICOM 3.0 & NIfTI file integration directly with hospital PACS archives.
+                </p>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -356,166 +376,136 @@ export default function LandingPage({ setActiveTab }) {
 
       {/* ============================================================ */}
       {/* 5. TRUST & SOCIAL PROOF                                       */}
+      {/* SINGLE UNIFIED CARD ON LEFT SIDE                             */}
       {/* ============================================================ */}
-      <section id="trust" className="space-y-16">
-        
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 border border-slate-700 text-xs text-slate-300">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Clinical Trust & Compliance</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-silver-gradient">
-            Validated by Lead Radiologists
-          </h2>
-          <p className="text-slate-400 text-base">
-            Tested across global research hospitals for safety, privacy, and diagnostic accuracy.
-          </p>
-        </div>
-
-        {/* Clinical Testimonials */}
-        <div className="grid md:grid-cols-2 gap-8">
+      <section id="trust" className="relative z-10">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
           
-          <div className="glass-card p-8 space-y-4 border-slate-700/80">
-            <p className="text-slate-300 text-sm italic leading-relaxed">
-              "FedMed allowed our radiology department to collaborate with international partners on rare brain tumor segmentation without violating strict hospital data privacy policies. The local speed is remarkable."
-            </p>
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
-              <div>
-                <div className="font-bold text-slate-200">Dr. Aris Thorne, MD</div>
-                <div className="text-slate-400">Chief of Neuroradiology • St. Jude Medical</div>
-              </div>
-              <span className="px-2.5 py-1 rounded bg-emerald-950 text-emerald-400 font-mono text-[11px]">
-                Verified User
-              </span>
+          {/* Unified Section Card (LEFT) */}
+          <div className="glass-card p-8 border-slate-700/80 space-y-6 relative shadow-2xl backdrop-blur-xl bg-black/80">
+            
+            {/* Horizontal Branch Connector Line to Central Timeline */}
+            <div className="absolute top-12 -right-12 w-12 h-[2px] bg-gradient-to-l from-emerald-400 to-slate-800 hidden md:block">
+              <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400 border border-slate-900 shadow-[0_0_10px_#10b981]"></div>
             </div>
+
+            {/* Header Badge & Title */}
+            <div className="space-y-2 border-b border-slate-800 pb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Clinical Trust & Compliance</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-silver-gradient">
+                Validated by Lead Radiologists
+              </h2>
+            </div>
+
+            {/* Concise Testimonial Quote & Compliance Pills */}
+            <div className="space-y-4 text-xs sm:text-sm">
+              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                <p className="text-slate-300 text-xs italic leading-relaxed">
+                  "FedMed allowed our neuroradiology department to collaborate internationally on brain tumor scans without violating hospital privacy laws."
+                </p>
+                <div className="text-[11px] font-bold text-slate-400">
+                  — Dr. Aris Thorne, MD • St. Jude Medical
+                </div>
+              </div>
+
+              {/* Compliance Pills Bar */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {['HIPAA Ready', 'GDPR Compliant', 'ISO 27001', 'FDA Software Standard'].map((badge, idx) => (
+                  <span 
+                    key={idx}
+                    className="px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-[11px] font-mono text-emerald-300"
+                  >
+                    ✓ {badge}
+                  </span>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          <div className="glass-card p-8 space-y-4 border-slate-700/80">
-            <p className="text-slate-300 text-sm italic leading-relaxed">
-              "The ability to run 3D MONAI segmentations locally while aggregating encrypted weights via Flower gave our IT audit team complete confidence in HIPAA compliance."
-            </p>
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
-              <div>
-                <div className="font-bold text-slate-200">Dr. Elena Rostova, PhD</div>
-                <div className="text-slate-400">Medical AI Director • Charité Hospital</div>
-              </div>
-              <span className="px-2.5 py-1 rounded bg-cyan-950 text-cyan-400 font-mono text-[11px]">
-                Verified User
-              </span>
-            </div>
-          </div>
+          {/* Right spacer */}
+          <div className="hidden md:block"></div>
 
         </div>
-
-        {/* Trust Badges Grid */}
-        <div className="pt-8 border-t border-slate-800/80">
-          <div className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500 mb-6">
-            Compliant with International Healthcare Software Standards
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            {['HIPAA Ready', 'GDPR Compliant', 'ISO 27001 Security', 'FDA Software Clearance Standard', 'DICOM 3.0 Compatible'].map((badge, idx) => (
-              <div 
-                key={idx}
-                className="px-5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-xs font-mono font-semibold text-slate-300 flex items-center gap-2 shadow-md"
-              >
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>{badge}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
       </section>
 
 
       {/* ============================================================ */}
       {/* 6. FINAL CALL-TO-ACTION & TECHNICAL FAQ                       */}
+      {/* SINGLE UNIFIED CARD ON RIGHT SIDE                            */}
       {/* ============================================================ */}
-      <section id="faq" className="space-y-16">
-        
-        {/* Final CTA Card */}
-        <div className="glass-card p-10 sm:p-14 text-center max-w-4xl mx-auto space-y-6 border-slate-700/80 relative overflow-hidden">
-          <div className="space-y-3">
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-silver-gradient">
-              Start Secure Local Training Today
-            </h2>
-            <p className="text-slate-400 text-base max-w-xl mx-auto">
-              Deploy FedMed nodes across your hospital network in minutes without altering PACS pipelines.
-            </p>
-          </div>
+      <section id="faq" className="relative z-10">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          
+          {/* Left spacer */}
+          <div className="hidden md:block"></div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <button 
-              onClick={() => setActiveTab && setActiveTab('dashboard')} 
-              className="btn-silver text-base"
-            >
-              <span>Launch Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          {/* Unified Section Card (RIGHT) */}
+          <div className="glass-card p-8 border-slate-700/80 space-y-6 relative shadow-2xl backdrop-blur-xl bg-black/80">
+            
+            {/* Horizontal Branch Connector Line to Central Timeline */}
+            <div className="absolute top-12 -left-12 w-12 h-[2px] bg-gradient-to-r from-cyan-400 to-slate-800 hidden md:block">
+              <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-cyan-400 border border-slate-900 shadow-[0_0_10px_#06b6d4]"></div>
+            </div>
 
-            <button 
-              onClick={() => setActiveTab && setActiveTab('viewer')} 
-              className="btn-glass text-base"
-            >
-              <Activity className="w-4 h-4 text-cyan-400" />
-              <span>Start Local Scan</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Technical FAQ Accordion */}
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="text-center space-y-2">
-            <h3 className="text-2xl sm:text-3xl font-bold text-silver-gradient">
-              Technical FAQ
-            </h3>
-            <p className="text-slate-400 text-sm">
-              Answers to common medical IT and radiologist questions.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: "What are the local hardware requirements for hospital nodes?",
-                a: "Hospital client nodes require an NVIDIA GPU with at least 8GB VRAM (e.g. RTX 3080/4090 or NVIDIA A100/T4) to execute local PyTorch MONAI 3D U-Net mini-batch training efficiently."
-              },
-              {
-                q: "Are raw patient MRI files ever uploaded to any central cloud server?",
-                a: "Never. Raw patient MRI scans remain strictly locked inside your local hospital network perimeter. Only encrypted parameter weight tensors are sent to the central Flower aggregator."
-              },
-              {
-                q: "What medical file formats are supported?",
-                a: "FedMed natively parses standard DICOM (.dcm) files from hospital PACS systems as well as NIfTI (.nii, .nii.gz) medical imaging formats."
-              },
-              {
-                q: "How is data retention and local privacy guaranteed?",
-                a: "Local datasets remain under your hospital's direct ownership. In addition, model parameter updates are encrypted using TenSEAL CKKS Homomorphic Encryption and injected with Differential Privacy noise before transmission."
-              }
-            ].map((faq, idx) => (
-              <div 
-                key={idx}
-                className="glass-card rounded-xl border border-slate-800 overflow-hidden transition-colors"
-              >
-                <button
-                  onClick={() => toggleFaq(idx)}
-                  className="w-full p-5 text-left font-semibold text-slate-200 flex items-center justify-between text-sm hover:text-white"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180 text-cyan-400' : ''}`} />
-                </button>
-
-                {openFaq === idx && (
-                  <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
+            {/* Header Badge & Title */}
+            <div className="space-y-2 border-b border-slate-800 pb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Technical FAQ</span>
               </div>
-            ))}
-          </div>
-        </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-silver-gradient">
+                Frequently Asked Questions
+              </h2>
+            </div>
 
+            {/* Concise Accordion (2-line answers max) */}
+            <div className="space-y-2 text-xs">
+              {[
+                {
+                  q: "Hardware requirements for hospital nodes?",
+                  a: "Requires NVIDIA GPU with >=8GB VRAM (RTX 3080/4090 or A100/T4) for local MONAI 3D U-Net mini-batch training."
+                },
+                {
+                  q: "Are raw patient MRI files uploaded to cloud?",
+                  a: "Never. Raw files strictly remain inside your hospital firewall. Only encrypted weight updates leave."
+                },
+                {
+                  q: "Supported medical file formats?",
+                  a: "Natively parses DICOM (.dcm) files from PACS archives and NIfTI (.nii, .nii.gz) 3D volumes."
+                },
+                {
+                  q: "How is data privacy guaranteed?",
+                  a: "Protected via TenSEAL CKKS Homomorphic Encryption tensor aggregation and Differential Privacy."
+                }
+              ].map((faq, idx) => (
+                <div 
+                  key={idx}
+                  className="rounded-lg border border-slate-800 bg-slate-900/80 overflow-hidden"
+                >
+                  <button
+                    onClick={() => toggleFaq(idx)}
+                    className="w-full p-3 text-left font-semibold text-slate-200 flex items-center justify-between text-xs hover:text-white"
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180 text-cyan-400' : ''}`} />
+                  </button>
+
+                  {openFaq === idx && (
+                    <div className="px-3 pb-3 text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+        </div>
       </section>
 
     </div>
