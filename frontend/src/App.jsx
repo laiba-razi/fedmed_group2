@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import Navbar from './components/Navbar';
+import SpotlightNavbar from './components/SpotlightNavbar';
 import DnaCanvas from './components/DnaCanvas';
 import LandingPage from './components/LandingPage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('landing');
+  const [activeTab, setActiveTab] = useState('hero');
+
+  // Check if current active tab is part of the Landing Page sections
+  const isLandingSection = ['hero', 'problem-solution', 'how-it-works', 'features', 'trust', 'faq'].includes(activeTab);
 
   return (
     <div className="min-h-screen bg-black text-slate-100 relative overflow-x-hidden selection:bg-slate-700 selection:text-white">
@@ -12,29 +15,30 @@ export default function App() {
       {/* 3D WebGL DNA Helix Background */}
       <DnaCanvas />
 
-      {/* Top Navbar */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Top Spotlight Navbar */}
+      <SpotlightNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Page Views */}
+      {/* Main Page Views */}
       <main>
-        {activeTab === 'landing' && (
+        {isLandingSection ? (
           <LandingPage setActiveTab={setActiveTab} />
-        )}
-
-        {activeTab !== 'landing' && (
+        ) : (
           <div className="relative z-10 pt-36 pb-20 px-6 max-w-4xl mx-auto text-center space-y-6">
             <div className="glass-card p-12 space-y-4">
               <h2 className="text-3xl font-bold text-silver-gradient capitalize">
-                {activeTab} Page
+                {activeTab} Module
               </h2>
               <p className="text-slate-400 text-sm max-w-md mx-auto">
-                The {activeTab} view will be built in the next step. Click below to return to the 3D Landing Page overview.
+                The {activeTab} engine view will be launched when triggered. Click below to return to the Landing Page.
               </p>
               <button 
-                onClick={() => setActiveTab('landing')}
+                onClick={() => {
+                  setActiveTab('hero');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className="btn-silver text-xs"
               >
-                Back to 3D Overview
+                Back to Landing Page
               </button>
             </div>
           </div>
