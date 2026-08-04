@@ -43,6 +43,7 @@ def root():
 def get_metrics():
     """
     Return live training metrics from logs/fl_metrics.json.
+    Returns empty rounds array if training has not started.
     """
     if METRICS_FILE.exists():
         try:
@@ -50,21 +51,33 @@ def get_metrics():
                 data = json.load(f)
                 return data
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error reading metrics: {str(e)}")
+            pass
     
-    # Return default baseline metrics if simulation hasn't run yet
     return {
         "project": "FedMed",
-        "num_rounds_completed": 5,
-        "best_dice_score": 0.735,
-        "rounds": [
-            {"round": 1, "train_loss": 0.842, "val_loss": 0.810, "dice_score": 0.421, "active_clients": 3},
-            {"round": 2, "train_loss": 0.612, "val_loss": 0.590, "dice_score": 0.584, "active_clients": 3},
-            {"round": 3, "train_loss": 0.435, "val_loss": 0.415, "dice_score": 0.669, "active_clients": 3},
-            {"round": 4, "train_loss": 0.298, "val_loss": 0.285, "dice_score": 0.712, "active_clients": 3},
-            {"round": 5, "train_loss": 0.185, "val_loss": 0.178, "dice_score": 0.735, "active_clients": 3},
-        ]
+        "num_rounds_completed": 0,
+        "best_dice_score": 0.0,
+        "rounds": []
     }
+
+
+@app.post("/api/reset")
+def reset_metrics():
+    """
+    Reset metrics file for a fresh simulation run.
+    """
+    initial_data = {
+        "project": "FedMed",
+        "num_rounds_completed": 0,
+        "best_dice_score": 0.0,
+        "rounds": []
+    }
+    try:
+        with open(METRICS_FILE, "w") as f:
+            json.dump(initial_data, f, indent=2)
+        return {"status": "SUCCESS", "message": "Metrics reset successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reset metrics: {str(e)}")
 
 
 @app.get("/api/nodes")
@@ -79,8 +92,8 @@ def get_nodes():
             "port": 8081,
             "samples": 417,
             "status": "ONLINE",
-            "loss": 0.182,
-            "dice": "73.8%",
+            "loss": "--",
+            "dice": "--",
             "latency": "18ms"
         },
         {
@@ -89,8 +102,8 @@ def get_nodes():
             "port": 8082,
             "samples": 420,
             "status": "ONLINE",
-            "loss": 0.188,
-            "dice": "73.2%",
+            "loss": "--",
+            "dice": "--",
             "latency": "24ms"
         },
         {
@@ -99,8 +112,8 @@ def get_nodes():
             "port": 8083,
             "samples": 414,
             "status": "ONLINE",
-            "loss": 0.185,
-            "dice": "73.5%",
+            "loss": "--",
+            "dice": "--",
             "latency": "31ms"
         }
     ]
@@ -114,12 +127,12 @@ class LaunchRequest(BaseModel):
 @app.post("/api/launch")
 def launch_fl_simulation(req: LaunchRequest, background_tasks: BackgroundTasks):
     """
-    Trigger the launch_federated.py script in background.
+    Trigger the launch_federated.py script in background after resetting metrics.
     """
     global simulation_process
 
-    if simulation_process and simulation_process.poll() is None:
-        return {"status": "ALREADY_RUNNING", "message": "Federated Learning simulation is already active."}
+    # Reset metrics file for clean run
+    reset_metrics()
 
     venv_python = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
     python_exe = str(venv_python) if venv_python.exists() else sys.executable
