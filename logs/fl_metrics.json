@@ -1,11 +1,21 @@
 {
   "project": "FedMed",
-  "num_rounds_completed": 1,
+  "num_rounds_completed": 3,
   "best_dice_score": 0.0,
   "rounds": [
     {
       "round": 1,
-      "train_loss": 0.4,
+      "train_loss": 1.53086910561637,
+      "active_clients": 3
+    },
+    {
+      "round": 2,
+      "train_loss": 0.8227553518565448,
+      "active_clients": 3
+    },
+    {
+      "round": 3,
+      "train_loss": 0.6082811625571819,
       "active_clients": 3
     }
   ]

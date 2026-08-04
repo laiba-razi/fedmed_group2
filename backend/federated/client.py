@@ -20,6 +20,7 @@ from backend.federated.config import (
     NUM_CLIENTS,
     SERVER_ADDRESS,
 )
+from backend.federated.crypto import apply_differential_privacy, encrypt_parameters_ckks
 from backend.federated.dataset import get_client_dataloader
 from backend.federated.losses import get_loss_function
 from backend.federated.metrics import get_dice_metric, get_post_transforms
@@ -138,11 +139,15 @@ class FedMedClient(fl.client.NumPyClient):
 
         avg_train_loss = total_loss / self.local_epochs
 
-        # Cryptography / Security Placeholder:
-        # [Placeholder for Cryptography & Security Engineer]
-        # E.g., Apply Differential Privacy noise (Opacus / Gaussian noise) or Homomorphic Encryption (TenSEAL CKKS)
-
+        # Extract updated model parameters
         updated_parameters = get_model_parameters(self.model)
+
+        # Apply Differential Privacy Gaussian Noise (Opacus / ε=3.2, δ=1e-5)
+        updated_parameters = apply_differential_privacy(updated_parameters, epsilon=3.2, delta=1e-5)
+
+        # Verify TenSEAL CKKS Homomorphic Encryption serialization
+        encrypt_parameters_ckks(updated_parameters)
+
         sample_count = len(self.train_loader.dataset)
 
         logger.info(f"[Client {self.client_id}] Local training complete. Returning parameter updates.")
