@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import SpotlightNavbar from './components/SpotlightNavbar';
 import DnaCanvas from './components/DnaCanvas';
 import LandingPage from './components/LandingPage';
+import Dashboard from './components/Dashboard';
+import MriViewer from './components/MriViewer';
+import PrivacyAudit from './components/PrivacyAudit';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('hero');
@@ -20,29 +23,10 @@ export default function App() {
 
       {/* Main Page Views */}
       <main>
-        {isLandingSection ? (
-          <LandingPage setActiveTab={setActiveTab} />
-        ) : (
-          <div className="relative z-10 pt-36 pb-20 px-6 max-w-4xl mx-auto text-center space-y-6">
-            <div className="glass-card p-12 space-y-4">
-              <h2 className="text-3xl font-bold text-silver-gradient capitalize">
-                {activeTab} Module
-              </h2>
-              <p className="text-slate-400 text-sm max-w-md mx-auto">
-                The {activeTab} engine view will be launched when triggered. Click below to return to the Landing Page.
-              </p>
-              <button 
-                onClick={() => {
-                  setActiveTab('hero');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="btn-silver text-xs"
-              >
-                Back to Landing Page
-              </button>
-            </div>
-          </div>
-        )}
+        {isLandingSection && <LandingPage setActiveTab={setActiveTab} />}
+        {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'viewer' && <MriViewer />}
+        {activeTab === 'privacy' && <PrivacyAudit />}
       </main>
 
     </div>

@@ -6,11 +6,9 @@ import { Dna, ShieldCheck, ArrowUpRight } from "lucide-react";
 export function SpotlightNavbar({
   items = [
     { label: "Overview", id: "hero" },
-    { label: "Problem & Solution", id: "problem-solution" },
-    { label: "How It Works", id: "how-it-works" },
-    { label: "Features", id: "features" },
-    { label: "Trust", id: "trust" },
-    { label: "FAQ", id: "faq" },
+    { label: "Live Dashboard", id: "dashboard" },
+    { label: "3D MRI Viewer", id: "viewer" },
+    { label: "Privacy Audit", id: "privacy" },
   ],
   activeTab = "hero",
   setActiveTab,
@@ -99,10 +97,14 @@ export function SpotlightNavbar({
     if (setActiveTab) {
       setActiveTab(item.id);
     }
-    const element = document.getElementById(item.id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    setTimeout(() => {
+      const element = document.getElementById(item.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   return (
