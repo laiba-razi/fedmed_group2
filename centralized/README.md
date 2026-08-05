@@ -1,54 +1,39 @@
-# FedMed 
+# FedMed — Federated Brain Tumour Segmentation
 
-## Overview
+FedMed is a final-year project demonstrating cross-silo federated learning for 3D brain tumour MRI segmentation. Three hospitals train locally on private BraTS data; Flower aggregates model-weight updates with FedAvg, so raw patient images never leave their originating hospital. The model is a MONAI 3D U-Net.
 
-FedMed is a privacy-preserving healthcare AI system that enables multiple hospitals to collaboratively train a machine learning model without sharing sensitive patient data. Instead of transferring raw medical images to a central server, each hospital trains the model locally on its own dataset and sends only the model parameters (weights) to a central aggregation server.
+> **Research use only.** FedMed is not a clinical decision-support device.
 
-The central server combines these encrypted model updates using the Federated Averaging (FedAvg) algorithm to produce a global model while ensuring complete data privacy. This approach complies with healthcare privacy regulations such as HIPAA and GDPR and demonstrates how federated learning can be applied in real-world medical environments.
+## Streamlit dashboard
 
-The project simulates three independent hospital nodes collaborating to train a brain tumor segmentation model using MRI images. It also includes a web dashboard for monitoring the training process, communication between distributed nodes, and optional privacy enhancements such as Homomorphic Encryption and Differential Privacy.
+`app.py` is the deployment-ready dashboard for the existing training pipeline. It provides Home, Dataset, Training, Prediction, Dashboard, and About views. It reads the existing `logs/fl_metrics.json` export and checkpoints, launches existing federated/centralized training, and uses the existing 3D U-Net for inference.
 
-## Features
+### Screenshots
 
-- Privacy-preserving Federated Learning
-- Multiple simulated hospital clients
-- Central aggregation server using Flower
-- Deep Learning model built with PyTorch
-- Medical image processing using MONAI
-- Federated Averaging (FedAvg) algorithm
-- Real-time training metrics dashboard
-- Secure communication between server and clients
-- Optional Homomorphic Encryption (TenSEAL)
-- Differential Privacy support (optional)
+Capture the **Home** and **Federated learning dashboard** views from the deployed app and add them to the final report. The UI is intentionally not shown with patient imagery in the public repository.
 
-## Tech Stack
+## Installation
 
-- Python
-- PyTorch
-- Flower
-- MONAI
-- React.js
-- Recharts
-- gRPC
-- WebSocket
-- TenSEAL (Optional)
-- Docker (Optional)
+Python 3.10 or later is recommended.
 
-## Project Workflow
+```bash
+git clone https://github.com/laiba-razi/fedmed_group2.git
+cd fedmed_group2
+python -m venv .venv
+# macOS/Linux
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-1. The central server initializes a global model.
-2. The model is distributed to all participating hospitals.
-3. Each hospital trains the model locally using its private MRI dataset.
-4. Only the updated model weights are sent back to the server.
-5. The server aggregates all updates using the FedAvg algorithm.
-6. The updated global model is redistributed for the next training round.
-7. The process repeats until the model converges.
+Set the local BraTS 2023 directory before training. The default is the project-relative `datasets/BraTS2023`.
 
-Throughout the process, no raw patient data leaves the hospital, ensuring complete data privacy.
-
-## Objective
-
-The primary goal of FedMed is to demonstrate how Federated Learning can enable collaborative AI development in healthcare while preserving patient privacy. The project showcases distributed machine learning, secure model aggregation, and scalable healthcare AI architecture.
+```bash
+# macOS/Linux
+export FEDMED_DATASET_ROOT="/path/to/BraTS2023"
+# Windows PowerShell
+$env:FEDMED_DATASET_ROOT="C:\path\to\BraTS2023"
+```
 
 ## Running the Centralized Baseline Model
 
@@ -76,3 +61,63 @@ To establish a baseline accuracy metric before moving to federated learning, you
    ```
    
 This will train the model, save the best weights as `best_metric_model.pth`, and run a final evaluation on the test split at the end.
+
+
+## Run locally
+
+```bash
+streamlit run app.py
+```
+
+The Training page invokes existing code. You may also run:
+
+```bash
+python launch_federated.py 3
+python test_federated.py
+```
+
+## Deploy with Streamlit Community Cloud
+
+1. Push this repository to GitHub.
+2. In [Streamlit Community Cloud](https://share.streamlit.io/), select **Create app**, choose the repository and branch, and set the main file to `app.py`.
+3. Deploy. Do not upload protected medical data to a public app. Community Cloud is appropriate for dashboard viewing; training and local data paths belong on local/private infrastructure.
+
+We have a comprehensive test suite to verify the security, node resilience, and architectural correctness of the pipeline.
+
+### Integration Tests
+Run the federated integration test suite to verify dataset zero-overlap partitioning, parameter serialization, and FedMedStrategy checkpointing:
+
+```bash
+python test_federated.py
+```
+## Folder structure
+
+```text
+fedmed_group2/
+├── app.py                         # Streamlit entry point
+├── backend/federated/
+│   ├── client.py                  # Flower hospital client
+│   ├── dataset.py                 # BraTS discovery and partitioning
+│   ├── model.py                   # MONAI 3D U-Net factory
+│   ├── strategy.py                # FedAvg, checkpoints, metrics export
+│   └── train.py                   # Existing centralized workflow
+├── checkpoints/                   # Generated global model checkpoints
+├── logs/fl_metrics.json           # Generated per-round metrics
+├── launch_federated.py            # Existing multi-process FL launcher
+└── requirements.txt
+```
+
+### Security & Resilience Tests
+For the mid-project review, we have prepared detailed guides to physically prove the TLS security and fault tolerance of the architecture:
+
+- [Test 1: TLS Secure Communication](tests/test_tls_security.md)
+- [Test 2: Node Resilience (Fault Tolerance)](tests/test_node_resilience.md)
+
+---
+## Outputs
+
+- `checkpoints/global_model_round_<N>.pth`: aggregated global checkpoints.
+- `checkpoints/best_model.pth`: best/current checkpoint.
+- `logs/fl_metrics.json`: per-round validation loss and global Dice score.
+
+The original project exports Dice and loss only. Precision, recall, F1 and a confusion matrix are intentionally marked unavailable until evaluation exports per-class labels and predictions.
