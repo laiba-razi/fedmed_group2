@@ -2,105 +2,12 @@
 # Python
 # ===============================
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# ===============================
-# Virtual Environment
-# ===============================
-.venv/
-venv/
-
-# ===============================
-# Datasets
-# ===============================
-BraTS/
-datasets/
-*.nii
-*.nii.gz
-
-# ===============================
-# Model Checkpoints
-# ===============================
-checkpoints/
-
-# ===============================
-# VS Code
-# ===============================
-.vscode/
-
-# ===============================
-# OS Files
-# ===============================
-.DS_Store
-Thumbs.db
-# ==========================
-# Python
-# ==========================
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-
-# ==========================
-# Virtual Environment
-# ==========================
-.venv/
-venv/
-env/
-
-# ==========================
-# Jupyter Notebook
-# ==========================
-.ipynb_checkpoints/
-
-# ==========================
-# VS Code
-# ==========================
-.vscode/
-
-# ==========================
-# Dataset
-# ==========================
-BraTS*/
-datasets/
-data/
-*.nii
-*.nii.gz
-*.tar
-*.zip
-
-# ==========================
-# Logs
-# ==========================
-logs/
-*.log
-
-# ==========================
-# TensorBoard
-# ==========================
-runs/
-
-# ==========================
-# Environment Variables
-# ==========================
-.env
-
-# ==========================
-# Operating System Files
-# ==========================
-.DS_Store
-Thumbs.db
-
-
-# Python
-__pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -118,19 +25,52 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
-venv/
+# ===============================
+# Virtual Environments
+# ===============================
 .venv/
+venv/
+env/
 .env/
 
-# Models & Weights
+# ===============================
+# Jupyter Notebook
+# ===============================
+.ipynb_checkpoints/
+
+# ===============================
+# Datasets & Checkpoints
+# ===============================
+data/
+datasets/
+BraTS/
+BraTS*/
+brats_synthetic/
+*.nii
+*.nii.gz
+*.tar
+*.zip
+checkpoints/
 *.pth
 *.pt
 *.ckpt
 
-# Datasets & Logs
-data/
-datasets/
+# ===============================
+# Logs & TensorBoard
+# ===============================
 logs/
+*.log
+runs/
 tensorboard/
-brats_synthetic/
+
+# ===============================
+# Environment Variables
+# ===============================
+.env
+
+# ===============================
+# IDE & OS Files
+# ===============================
+.vscode/
+.DS_Store
+Thumbs.db
