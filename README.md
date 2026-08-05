@@ -54,6 +54,14 @@ python test_federated.py
 2. In [Streamlit Community Cloud](https://share.streamlit.io/), select **Create app**, choose the repository and branch, and set the main file to `app.py`.
 3. Deploy. Do not upload protected medical data to a public app. Community Cloud is appropriate for dashboard viewing; training and local data paths belong on local/private infrastructure.
 
+We have a comprehensive test suite to verify the security, node resilience, and architectural correctness of the pipeline.
+
+### Integration Tests
+Run the federated integration test suite to verify dataset zero-overlap partitioning, parameter serialization, and FedMedStrategy checkpointing:
+
+```bash
+python test_federated.py
+```
 ## Folder structure
 
 ```text
@@ -71,6 +79,13 @@ fedmed_group2/
 └── requirements.txt
 ```
 
+### Security & Resilience Tests
+For the mid-project review, we have prepared detailed guides to physically prove the TLS security and fault tolerance of the architecture:
+
+- [Test 1: TLS Secure Communication](tests/test_tls_security.md)
+- [Test 2: Node Resilience (Fault Tolerance)](tests/test_node_resilience.md)
+
+---
 ## Outputs
 
 - `checkpoints/global_model_round_<N>.pth`: aggregated global checkpoints.
