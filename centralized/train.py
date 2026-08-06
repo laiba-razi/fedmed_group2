@@ -6,30 +6,35 @@ import torch.nn.functional as F
 from monai.networks.nets import UNet
 from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AsDiscrete
+from monai.transforms import Activations, AsDiscrete, Compose
 from monai.data import decollate_batch, Dataset, DataLoader
 
 # Assuming dataset.py is in the same directory
 from dataset import get_brats_data_files, get_train_transforms_aug, get_val_transforms
 
-def main(data_dir="brats", max_epochs=50, val_ratio=0.2, num_train_subset=800):
+def main(data_dir="brats_synthetic", max_epochs=2, val_ratio=0.2, test_ratio=0.1, num_train_subset=800):
     # 1. Device Configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
     # 2. Data Preparation
-    print("Preparing data...")
+    print(f"Preparing data from: {data_dir}")
     all_files = get_brats_data_files(data_dir)
     num_total = len(all_files)
     
-    # Using subset for training as in notebook, and fixed val_ratio for validation
-    train_files_subset = all_files[:num_train_subset]
+    # Train, Val, Test split
+    num_test = int(math.ceil(num_total * test_ratio))
     num_val = int(math.ceil(num_total * val_ratio))
-    val_files = all_files[num_total - num_val:] # Use last part for validation
+    
+    # Ensure we don't request more training samples than available
+    train_files_subset = all_files[:min(num_train_subset, num_total - num_val - num_test)]
+    val_files = all_files[num_total - num_val - num_test : num_total - num_test] 
+    test_files = all_files[num_total - num_test:]
 
     print(f"Total data samples: {num_total}")
     print(f"Training samples (subset): {len(train_files_subset)}")
     print(f"Validation samples: {len(val_files)}")
+    print(f"Test samples: {len(test_files)}")
 
     train_ds = Dataset(
         data=train_files_subset,
@@ -50,8 +55,20 @@ def main(data_dir="brats", max_epochs=50, val_ratio=0.2, num_train_subset=800):
         batch_size=1,
         shuffle=False
     )
+    
+    test_ds = Dataset(
+        data=test_files,
+        transform=get_val_transforms()
+    )
+    test_loader = DataLoader(
+        test_ds,
+        batch_size=1,
+        shuffle=False
+    )
+    
     print(f"Train DataLoader size: {len(train_loader)}")
     print(f"Validation DataLoader size: {len(val_loader)}")
+    print(f"Test DataLoader size: {len(test_loader)}")
 
     # 3. Model, Loss, Optimizer, Metrics
     model = UNet(
@@ -149,6 +166,40 @@ def main(data_dir="brats", max_epochs=50, val_ratio=0.2, num_train_subset=800):
                     print("Saved new best metric model!")
 
     print(f"\nTraining finished. Best validation Dice score: {best_metric:.4f} at epoch {best_metric_epoch}")
+    
+    # Load best model for testing
+    if os.path.exists("best_metric_model.pth"):
+        model.load_state_dict(torch.load("best_metric_model.pth"))
+        print("Loaded best model for testing.")
+        
+    print("Starting Testing phase...")
+    model.eval()
+    test_dice_metric = DiceMetric(include_background=False, reduction="mean")
+    with torch.no_grad():
+        for test_data in test_loader:
+            inputs_test = test_data["image"].to(device)
+            labels_test = test_data["label"].to(device)
+
+            # Dynamic padding for testing
+            current_d, current_h, current_w = inputs_test.shape[2:]
+            target_d = current_d + (16 - current_d % 16) % 16
+            target_h = current_h + (16 - current_h % 16) % 16
+            target_w = current_w + (16 - current_w % 16) % 16
+            padding_test = (0, target_w - current_w, 0, target_h - current_h, 0, target_d - current_d)
+
+            inputs_test = F.pad(inputs_test, padding_test, "constant", 0)
+            labels_test = F.pad(labels_test, padding_test, "constant", 0)
+
+            outputs_test = model(inputs_test)
+
+            outputs_test = [post_pred(i) for i in decollate_batch(outputs_test)]
+            labels_test = [post_label(i) for i in decollate_batch(labels_test)]
+
+            test_dice_metric(y_pred=outputs_test, y=labels_test)
+
+        test_metric = test_dice_metric.aggregate().item()
+        print(f"Final Test Dice Score: {test_metric:.4f}")
+        
     torch.save(model.state_dict(), "final_model.pth")
     print("Final model saved as final_model.pth")
 

@@ -1,149 +1,131 @@
 # FedMed: Cross-Silo Federated Learning Engine
 
-**FedMed** is a privacy-preserving healthcare AI framework that enables multiple hospitals to collaboratively train a 3D brain tumor segmentation model (MONAI 3D U-Net) on private MRI scans without sharing raw patient data.
+**FedMed** is a privacy-preserving machine learning (PPML) project designed for the healthcare domain. It demonstrates a cross-silo federated learning architecture for training a 3D brain tumor MRI segmentation model across multiple hospitals without sharing sensitive raw patient data.
 
-Instead of pooling sensitive medical imagery onto a central server (violating HIPAA/GDPR), each hospital node trains the model locally on its private dataset partition and sends only parameter weight updates to a central aggregation server running **Flower (`flwr`)**.
-
----
-
-## 🏗️ Architecture & Team Roles
-
-```text
-                               ┌───────────────────────────┐
-                               │   Central Flower Server   │
-                               │   (FedMedStrategy FedAvg) │
-                               └─────────────┬─────────────┘
-                                             │
-                      ┌──────────────────────┼──────────────────────┐
-                      ▼                      ▼                      ▼
-           ┌─────────────────────┐┌─────────────────────┐┌─────────────────────┐
-           │ Hospital 1 Node     ││ Hospital 2 Node     ││ Hospital 3 Node     │
-           │ (St. Jude)          ││ (Mayo Clinic)       ││ (Charité)           │
-           │ Private Dataset 1/3 ││ Private Dataset 2/3 ││ Private Dataset 3/3 │
-           └─────────────────────┘└─────────────────────┘└─────────────────────┘
-```
-
-| Module / Role | Primary Files | Status |
-| :--- | :--- | :--- |
-| **Federated Learning Specialist** | `client.py`, `strategy.py`, `server.py`, `launch_federated.py`, `test_federated.py` | ✅ **Completed & Verified** |
-| **Computer Vision Engineer** | `model.py`, `dataset.py`, `losses.py`, `metrics.py`, `train.py` | ✅ Baseline MONAI Pipeline Ready |
-| **Cryptography & Security** | *Placeholders in `client.py` & `strategy.py`* | ⏳ Plug-in Ready (HE / DP) |
-| **Backend Engineer** | *`logs/fl_metrics.json` exporter* | ⏳ Ready for WebSocket Streaming |
-| **Frontend Developer** | *React Dashboard* | ⏳ Ready for Metrics Visualization |
+> **Disclaimer:** FedMed is intended for **research use only** and is not a clinical decision-support device.
 
 ---
 
-## 📁 Repository Structure
+## 📖 Overview
 
-```text
-fedmed_group2/
-├── backend/
-│   └── federated/
-│       ├── __init__.py
-│       ├── config.py           # Central configuration (paths, FL parameters, hyperparams)
-│       ├── dataset.py          # BraTS loader & 3-hospital deterministic partitioner
-│       ├── model.py            # MONAI 3D U-Net architecture definition
-│       ├── losses.py           # MONAI DiceCELoss function
-│       ├── metrics.py          # MONAI DiceMetric evaluation
-│       ├── client.py           # Flower NumPyClient (FedMedClient) for hospital nodes
-│       ├── strategy.py         # Custom FedMedStrategy (FedAvg, checkpointing, metrics exporter)
-│       ├── server.py           # Central Flower gRPC server launcher
-│       └── train.py            # Centralized baseline training script
-├── checkpoints/                # Aggregated global model weight checkpoints (.pth)
-├── logs/                       # Training metrics export (fl_metrics.json)
-├── launch_federated.py         # Multi-process orchestrator for 1 server + 3 clients
-├── test_federated.py           # Integration test suite (zero-overlap, serialization, strategy)
-├── requirements.txt            # Project dependencies
-└── README.md                   # System documentation
-```
+Training highly accurate machine learning models for rare diseases requires massive patient datasets. However, strict data privacy laws (like HIPAA and GDPR) prevent hospitals from pooling raw patient data into centralized servers.
+
+FedMed solves this by bringing the model to the data:
+1. **Decentralized Training:** A centralized server distributes an untrained 3D U-Net model to participating hospital nodes.
+2. **Local Updates:** Each hospital trains the model locally on its private MRI dataset.
+3. **Secure Aggregation:** Only encrypted model weight updates are sent back to the central server, where they are aggregated (using FedAvg) to improve the global model.
+
+### Key Technologies
+* **Federated Learning:** [Flower (`flwr`)](https://flower.ai/) orchestrates the decentralized training loop.
+* **Deep Learning & Medical Imaging:** [PyTorch](https://pytorch.org/) and [MONAI](https://monai.io/) power the 3D U-Net architecture for MRI segmentation.
+* **Dashboard:** [Streamlit](https://streamlit.io/) provides a real-time monitoring interface for tracking global model convergence and accuracy.
 
 ---
 
-## ⚙️ Prerequisites & Setup
+## 🚀 Getting Started
 
-### 1. Virtual Environment & Dependencies
-Clone the repository and set up a Python 3.10+ virtual environment:
+### 1. Prerequisites
+Ensure you have **Python 3.10+** installed on your system.
+
+### 2. Installation
+Clone the repository and set up a virtual environment:
 
 ```bash
-# Activate virtual environment (Windows PowerShell)
-.\.venv\Scripts\Activate.ps1
+git clone https://github.com/laiba-razi/fedmed_group2.git
+cd fedmed_group2
 
-# Install requirements
+# Create and activate a virtual environment
+python -m venv .venv
+
+# macOS/Linux
+source .venv/bin/activate
+# Windows
+.venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Dataset Configuration
-Configure your BraTS 2023 MRI dataset path in `backend/federated/config.py`:
+### 3. Dataset Configuration
+The project uses the BraTS dataset for 3D MRI segmentation. By default, the system looks for the dataset in `datasets/BraTS2023`. You can override this by setting an environment variable:
 
-```python
-DATASET_ROOT = Path(r"D:\fedmed data set\ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData")
+```bash
+# macOS/Linux
+export FEDMED_DATASET_ROOT="/path/to/your/BraTS2023"
+
+# Windows PowerShell
+$env:FEDMED_DATASET_ROOT="C:\path\to\your\BraTS2023"
 ```
 
 ---
 
-## 🚀 How to Run
+## 🏃‍♂️ Running the Project
 
-### Option A: Automated Multi-Node Launcher (Recommended)
-Launches 1 Central Flower Server and 3 distinct Hospital Node Clients in parallel sub-processes:
+### Federated Learning Simulation
+You can launch the full federated learning simulation (1 Server + 3 Hospital Clients) locally using the provided launcher:
 
 ```bash
-# Run FL simulation for 3 communication rounds
+# Run FL for 3 rounds (default)
 python launch_federated.py 3
 ```
+This will automatically spawn the central server and the hospital nodes, execute the federated training loop, and save the aggregated global model checkpoints in the `checkpoints/` directory.
 
-### Option B: Manual Multi-Terminal Launcher
-You can manually run the server and client nodes in separate terminals:
+### Centralized Baseline Training
+To establish a baseline before running the federated pipeline, you can train a standard centralized model:
 
-**Terminal 1: Start Central Server**
 ```bash
-python -m backend.federated.server --num-rounds 5 --min-clients 3
+cd centralized
+python train.py
 ```
+*(Note: You can configure the dataset path and number of epochs directly inside `centralized/train.py`.)*
 
-**Terminal 2: Start Hospital 1 (St. Jude)**
-```bash
-python -m backend.federated.client --client-id 0
-```
-
-**Terminal 3: Start Hospital 2 (Mayo Clinic)**
-```bash
-python -m backend.federated.client --client-id 1
-```
-
-**Terminal 4: Start Hospital 3 (Charité)**
-```bash
-python -m backend.federated.client --client-id 2
-```
-
-### Option C: Centralized Baseline Training
-To run a standard non-federated MONAI 3D U-Net training pipeline on the full dataset:
+### Streamlit Dashboard
+To visualize the training progress, monitor metrics, and perform inferences using the global model, launch the Streamlit dashboard:
 
 ```bash
-python -m backend.federated.train
+streamlit run app.py
 ```
 
 ---
 
-## 🧪 Testing & Verification
+## 📂 Project Structure
 
-Run the federated integration test suite to verify dataset zero-overlap partitioning, parameter serialization, and FedMedStrategy checkpointing:
+```text
+fedmed_group2/
+├── app.py                         # Streamlit dashboard entry point
+├── launch_federated.py            # FL simulation launcher (Server + Clients)
+├── requirements.txt               # Python dependencies
+├── backend/
+│   ├── federated/                 # Core FL logic
+│   │   ├── client.py              # Hospital node client (Flower)
+│   │   ├── server.py              # Central aggregation server
+│   │   ├── strategy.py            # Custom FedAvg aggregation & metrics logic
+│   │   ├── model.py               # MONAI 3D U-Net architecture
+│   │   └── dataset.py             # Dataset partitioning logic
+│   └── privacy/                   # Security and TLS configurations
+│       └── generate_certs.sh      # Script to generate TLS certificates
+├── centralized/                   # Baseline centralized training scripts
+├── checkpoints/                   # Saved global model checkpoints (.pth)
+├── logs/                          # Training metrics (fl_metrics.json)
+└── tests/                         # Integration, security, and resilience tests
+```
+
+---
+
+## 🛡️ Security & Testing
+
+We have built a comprehensive test suite to verify the security, node resilience, and architectural correctness of the pipeline. 
+
+### Integration Tests
+Run the federated integration test suite to verify dataset zero-overlap partitioning, parameter serialization, and checkpointing:
 
 ```bash
 python test_federated.py
 ```
 
-Expected output:
-```text
-Ran 3 tests in 0.314s
+### Security & Resilience
+For detailed guides on physical testing of TLS security and fault tolerance, refer to our test documentation:
+- [Test 1: TLS Secure Communication](tests/test_tls_security.md)
+- [Test 2: Node Resilience (Fault Tolerance)](tests/test_node_resilience.md)
 
-OK
-[PASS] Test 1 Passed: Dataset Partitioning Coverage & Zero-Overlap Verified.
-[PASS] Test 2 Passed: Model Parameter Serialization & Deserialization Verified.
-[PASS] Test 3 Passed: FedMedStrategy Aggregation & Checkpoint Export Verified.
-```
-
----
-
-## 📊 Outputs & Artifacts
-
-- **Model Checkpoints**: Saved automatically after each FL round in `checkpoints/global_model_round_{N}.pth` and `checkpoints/best_global_model.pth`.
-- **Live Metrics**: Per-round training loss, validation loss, and aggregated Dice scores are exported to `logs/fl_metrics.json`.
+*(Note: Advanced privacy features such as Homomorphic Encryption (TenSEAL) and Differential Privacy (Opacus) are currently planned for future phases and have placeholders in the codebase).*

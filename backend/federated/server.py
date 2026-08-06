@@ -7,6 +7,7 @@ import argparse
 import logging
 import flwr as fl
 from flwr.server import ServerConfig, start_server
+from pathlib import Path
 
 from backend.federated.config import (
     MIN_AVAILABLE_CLIENTS,
@@ -50,11 +51,20 @@ def main():
         min_available_clients=args.min_available_clients,
     )
 
+    # Load TLS Certificates
+    certs_dir = Path(__file__).parent.parent / "privacy" / ".certs"
+    certificates = (
+        (certs_dir / "ca.crt").read_bytes(),
+        (certs_dir / "server.pem").read_bytes(),
+        (certs_dir / "server.key").read_bytes(),
+    )
+
     # Launch Flower gRPC server
     start_server(
         server_address=args.server_address,
         config=ServerConfig(num_rounds=args.num_rounds),
         strategy=strategy,
+        certificates=certificates,
     )
 
 
