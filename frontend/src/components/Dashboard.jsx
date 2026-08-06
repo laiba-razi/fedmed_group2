@@ -33,35 +33,39 @@ export default function Dashboard() {
     { id: 'Node-3', name: 'Charité University Hospital Berlin', port: 8083, samples: 414, status: 'IDLE', loss: '--', dice: '--', latency: '31ms' },
   ]);
 
-  // Fetch live metrics from backend
+  const processMetricsData = (data) => {
+    if (data && data.rounds && Array.isArray(data.rounds) && data.rounds.length > 0) {
+      const formatted = data.rounds.map(r => ({
+        round: `R${r.round}`,
+        federatedLoss: Number(r.train_loss || 0.2).toFixed(4),
+        centralizedLoss: Number((r.train_loss || 0.2) * 0.92).toFixed(4),
+        diceScore: r.dice_score ? `${(r.dice_score * 100).toFixed(1)}%` : '73.5%'
+      }));
+      setMetricsData(formatted);
+
+      const latest = data.rounds[data.rounds.length - 1];
+      setSummaryMetrics({
+        activeNodes: `${latest.active_clients || 3} / 3`,
+        diceScore: latest.dice_score ? `${(latest.dice_score * 100).toFixed(1)}%` : '73.5%',
+        trainLoss: Number(latest.train_loss || 0.185).toFixed(4),
+        dataExposed: '0 Bytes'
+      });
+
+      setNodes([
+        { id: 'Node-1', name: 'St. Jude Children\'s Hospital', port: 8081, samples: 417, status: 'ONLINE', loss: Number(latest.train_loss || 0.18).toFixed(3), dice: '73.8%', latency: '18ms' },
+        { id: 'Node-2', name: 'Mayo Clinic Neuroradiology', port: 8082, samples: 420, status: 'ONLINE', loss: Number((latest.train_loss || 0.18) * 1.02).toFixed(3), dice: '73.2%', latency: '24ms' },
+        { id: 'Node-3', name: 'Charité University Hospital Berlin', port: 8083, samples: 414, status: 'ONLINE', loss: Number((latest.train_loss || 0.18) * 0.99).toFixed(3), dice: '73.5%', latency: '31ms' },
+      ]);
+    }
+  };
+
+  // Fetch live metrics from backend via REST fallback
   const fetchMetrics = async () => {
     try {
       const res = await fetch('http://127.0.0.1:8000/api/metrics');
       if (res.ok) {
         const data = await res.json();
-        if (data.rounds && Array.isArray(data.rounds) && data.rounds.length > 0) {
-          const formatted = data.rounds.map(r => ({
-            round: `R${r.round}`,
-            federatedLoss: Number(r.train_loss || 0.2).toFixed(4),
-            centralizedLoss: Number((r.train_loss || 0.2) * 0.92).toFixed(4),
-            diceScore: r.dice_score ? `${(r.dice_score * 100).toFixed(1)}%` : '73.5%'
-          }));
-          setMetricsData(formatted);
-
-          const latest = data.rounds[data.rounds.length - 1];
-          setSummaryMetrics({
-            activeNodes: `${latest.active_clients || 3} / 3`,
-            diceScore: latest.dice_score ? `${(latest.dice_score * 100).toFixed(1)}%` : '73.5%',
-            trainLoss: Number(latest.train_loss || 0.185).toFixed(4),
-            dataExposed: '0 Bytes'
-          });
-
-          setNodes([
-            { id: 'Node-1', name: 'St. Jude Children\'s Hospital', port: 8081, samples: 417, status: 'ONLINE', loss: Number(latest.train_loss || 0.18).toFixed(3), dice: '73.8%', latency: '18ms' },
-            { id: 'Node-2', name: 'Mayo Clinic Neuroradiology', port: 8082, samples: 420, status: 'ONLINE', loss: Number((latest.train_loss || 0.18) * 1.02).toFixed(3), dice: '73.2%', latency: '24ms' },
-            { id: 'Node-3', name: 'Charité University Hospital Berlin', port: 8083, samples: 414, status: 'ONLINE', loss: Number((latest.train_loss || 0.18) * 0.99).toFixed(3), dice: '73.5%', latency: '31ms' },
-          ]);
-        }
+        processMetricsData(data);
       }
     } catch (err) {
       // Offline fallback
@@ -70,9 +74,32 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 2000);
-    return () => clearInterval(interval);
+
+    // WebSocket connection for real-time live streaming
+    let socket = null;
+    try {
+      socket = new WebSocket('ws://127.0.0.1:8000/ws/metrics');
+      socket.onmessage = (event) => {
+        try {
+          const wsData = JSON.parse(event.data);
+          processMetricsData(wsData);
+        } catch (e) {
+          // Ignore json parse error
+        }
+      };
+    } catch (wsErr) {
+      // Fallback
+    }
+
+    const interval = setInterval(fetchMetrics, 2500);
+    return () => {
+      clearInterval(interval);
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
   }, []);
+
 
   // Trigger FL simulation via FastAPI endpoint
   const handleStartSimulation = async () => {

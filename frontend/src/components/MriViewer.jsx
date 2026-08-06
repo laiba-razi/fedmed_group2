@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Layers, 
   Eye, 
@@ -8,7 +8,8 @@ import {
   ShieldCheck, 
   Sparkles, 
   Maximize2,
-  Lock
+  Lock,
+  Activity
 } from 'lucide-react';
 
 export default function MriViewer() {
@@ -20,9 +21,33 @@ export default function MriViewer() {
     ET: true, // Enhancing Tumor (Emerald)
   });
 
+  const [sampleData, setSampleData] = useState({
+    patient_id: "BraTS2023_00142",
+    has_tumor: true,
+    tumor_volume_cc: 34.2,
+    centralized_dice: 0.741,
+    federated_dice: 0.735
+  });
+
   const toggleMask = (key) => {
     setMasks((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // Fetch live slice data from FastAPI backend
+  useEffect(() => {
+    const fetchSliceData = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/mri-sample?slice_idx=${sliceIndex}&modality=${modality}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSampleData(data);
+        }
+      } catch (err) {
+        // Fallback
+      }
+    };
+    fetchSliceData();
+  }, [sliceIndex, modality]);
 
   return (
     <div className="relative z-10 min-h-screen text-slate-200 pt-28 pb-20 px-6 max-w-7xl mx-auto space-y-8">
@@ -44,7 +69,7 @@ export default function MriViewer() {
 
         <div className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 flex items-center gap-2">
           <Brain className="w-4 h-4 text-cyan-400" />
-          <span>Patient ID: BraTS2023_00142</span>
+          <span>Patient ID: {sampleData.patient_id || 'BraTS2023_00142'}</span>
         </div>
       </div>
 
@@ -156,7 +181,7 @@ export default function MriViewer() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <span className="text-xs font-bold text-slate-300">Centralized Baseline</span>
               <span className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                Dice: 74.1%
+                Dice: {(sampleData.centralized_dice * 100).toFixed(1)}%
               </span>
             </div>
 
@@ -173,9 +198,9 @@ export default function MriViewer() {
               </div>
 
               {/* Tumor Mask Highlights */}
-              {masks.WT && <div className="absolute top-1/3 left-1/3 w-28 h-24 rounded-full bg-cyan-500/20 border-2 border-cyan-400/80 blur-xs"></div>}
-              {masks.TC && <div className="absolute top-1/3 left-1/3 w-16 h-14 rounded-full bg-violet-500/30 border-2 border-violet-400/90 blur-xs"></div>}
-              {masks.ET && <div className="absolute top-1/3 left-1/3 w-8 h-8 rounded-full bg-emerald-500/40 border-2 border-emerald-400/90 blur-xs"></div>}
+              {masks.WT && sampleData.has_tumor && <div className="absolute top-1/3 left-1/3 w-28 h-24 rounded-full bg-cyan-500/20 border-2 border-cyan-400/80 blur-xs"></div>}
+              {masks.TC && sampleData.has_tumor && <div className="absolute top-1/3 left-1/3 w-16 h-14 rounded-full bg-violet-500/30 border-2 border-violet-400/90 blur-xs"></div>}
+              {masks.ET && sampleData.has_tumor && <div className="absolute top-1/3 left-1/3 w-8 h-8 rounded-full bg-emerald-500/40 border-2 border-emerald-400/90 blur-xs"></div>}
             </div>
 
             <div className="text-xs text-slate-400 font-mono flex items-center justify-between">
@@ -192,7 +217,7 @@ export default function MriViewer() {
                 <span className="text-xs font-bold text-cyan-300">FedMed Federated Engine</span>
               </div>
               <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">
-                Dice: 73.5%
+                Dice: {(sampleData.federated_dice * 100).toFixed(1)}%
               </span>
             </div>
 
@@ -209,9 +234,9 @@ export default function MriViewer() {
               </div>
 
               {/* Tumor Mask Highlights */}
-              {masks.WT && <div className="absolute top-1/3 left-1/3 w-28 h-24 rounded-full bg-cyan-500/30 border-2 border-cyan-400 shadow-[0_0_15px_#06b6d4] blur-xs"></div>}
-              {masks.TC && <div className="absolute top-1/3 left-1/3 w-16 h-14 rounded-full bg-violet-500/40 border-2 border-violet-400 shadow-[0_0_15px_#8b5cf6] blur-xs"></div>}
-              {masks.ET && <div className="absolute top-1/3 left-1/3 w-8 h-8 rounded-full bg-emerald-500/50 border-2 border-emerald-400 shadow-[0_0_15px_#10b981] blur-xs"></div>}
+              {masks.WT && sampleData.has_tumor && <div className="absolute top-1/3 left-1/3 w-28 h-24 rounded-full bg-cyan-500/30 border-2 border-cyan-400 shadow-[0_0_15px_#06b6d4] blur-xs"></div>}
+              {masks.TC && sampleData.has_tumor && <div className="absolute top-1/3 left-1/3 w-16 h-14 rounded-full bg-violet-500/40 border-2 border-violet-400 shadow-[0_0_15px_#8b5cf6] blur-xs"></div>}
+              {masks.ET && sampleData.has_tumor && <div className="absolute top-1/3 left-1/3 w-8 h-8 rounded-full bg-emerald-500/50 border-2 border-emerald-400 shadow-[0_0_15px_#10b981] blur-xs"></div>}
             </div>
 
             <div className="text-xs text-slate-400 font-mono flex items-center justify-between">
