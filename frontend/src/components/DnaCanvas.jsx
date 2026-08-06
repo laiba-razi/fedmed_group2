@@ -187,7 +187,7 @@ export default function DnaCanvas() {
       // Outer container lerps parent Z-tilt from diagonal slope (top) to vertical (middle/bottom)
       dnaGroup.rotation.z = THREE.MathUtils.lerp(dnaGroup.rotation.z, targetRotationZ, 0.08);
 
-      // Keep position fixed at screen center (no translation across screen)
+      // Keep DNA Helix centered in the middle of the screen aligned with the central glowing axis line
       dnaGroup.position.set(0, 0, 0);
 
       // Rotate particle background slightly

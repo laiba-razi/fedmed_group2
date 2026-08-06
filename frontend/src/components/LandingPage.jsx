@@ -40,7 +40,7 @@ export default function LandingPage({ setActiveTab }) {
   }, []);
 
   return (
-    <div className="relative z-10 min-h-screen text-slate-200 pt-28 pb-24 px-6 max-w-7xl mx-auto space-y-48">
+    <div className="relative z-10 min-h-screen text-slate-200 pt-20 pb-24 px-6 max-w-7xl mx-auto space-y-48">
 
       {/* ============================================================ */}
       {/* CENTRAL GLOWING TIMELINE AXIS LINE                           */}
@@ -70,32 +70,32 @@ export default function LandingPage({ setActiveTab }) {
       {/* ============================================================ */}
       {/* 1. HERO SECTION (Above the Fold)                              */}
       {/* ============================================================ */}
-      <section id="hero" className="min-h-[85vh] flex flex-col justify-center items-start pt-4 relative z-10">
-        <div className="grid lg:grid-cols-12 gap-12 items-center w-full">
+      <section id="hero" className="pt-2 pb-16 flex flex-col justify-start items-start relative z-10">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start w-full">
           
-          {/* Left Column: Headlines & Primary CTA */}
-          <div className="lg:col-span-7 space-y-8">
+          {/* Left Column: Headlines & Primary CTA (Positioned UP) */}
+          <div className="lg:col-span-7 space-y-6 relative z-10 p-2 sm:p-5 rounded-3xl bg-black/40 backdrop-blur-md border border-slate-800/40 shadow-2xl">
             
             {/* Top Security Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-semibold text-slate-300 shadow-xl backdrop-blur-md">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>HIPAA & GDPR Compliant</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-              <span className="text-cyan-400 font-mono">Edge Federated Engine</span>
+            <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-semibold text-slate-300 shadow-xl backdrop-blur-md max-w-full">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="whitespace-nowrap">HIPAA & GDPR Compliant</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping shrink-0 hidden sm:inline-block"></span>
+              <span className="text-cyan-400 font-mono whitespace-nowrap">Edge Federated Engine</span>
             </div>
 
             {/* Main Silver Headline */}
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] text-silver-gradient">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-silver-gradient">
               Secure, Local AI Training for MRI Diagnostics.
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg text-slate-400 font-normal leading-relaxed max-w-2xl">
+            <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl">
               Train advanced deep learning models directly on your clinical data without compromising patient privacy or transferring files outside your hospital network.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <button 
                 onClick={() => setActiveTab && setActiveTab('dashboard')} 
                 className="btn-silver text-base"
@@ -114,26 +114,28 @@ export default function LandingPage({ setActiveTab }) {
             </div>
 
             {/* Quick Trust Checklist */}
-            <div className="flex flex-wrap items-center gap-6 pt-4 text-xs text-slate-400 font-medium">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Zero File Transfers</span>
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2 text-xs text-slate-300 font-medium">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="whitespace-nowrap">Zero File Transfers</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                <span>Homomorphic Encryption</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span className="whitespace-nowrap">Homomorphic Encryption</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-violet-400" />
-                <span>PACS / DICOM Native</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm">
+                <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />
+                <span className="whitespace-nowrap">PACS / DICOM Native</span>
               </div>
             </div>
 
           </div>
 
-          {/* Right Column: Visual Anchor (MRI Scan Processing UI Mockup) */}
-          <div className="lg:col-span-5">
-            <div className="glass-card p-6 border-slate-700/80 space-y-5 relative overflow-hidden shadow-2xl">
+
+          {/* Right Column: Visual Anchor (Positioned RIGHT) */}
+          <div className="lg:col-span-5 flex justify-end w-full lg:pl-4">
+            <div className="glass-card p-6 border-slate-700/80 space-y-5 relative overflow-hidden shadow-2xl w-full max-w-lg lg:ml-auto">
+
               
               {/* Card Top Status Bar */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
