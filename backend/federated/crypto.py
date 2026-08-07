@@ -72,7 +72,7 @@ def apply_differential_privacy(
         dp_param = clipped_param + (noise * 0.001)  # Calibrated scale
         dp_parameters.append(dp_param.astype(param.dtype))
 
-    logger.info(f"Applied Differential Privacy Gaussian noise (ε={epsilon}, δ={delta}, noise_multiplier={noise_multiplier})")
+    logger.info(f"Applied Differential Privacy Gaussian noise (epsilon={epsilon}, delta={delta}, noise_multiplier={noise_multiplier})")
     return dp_parameters
 
 
@@ -125,7 +125,7 @@ def get_privacy_telemetry():
         },
         "audit_logs": [
             "[CKKS] Context generated with polynomial modulus degree 8192",
-            "[DP] Noise multiplier 1.1 applied to local parameter gradients (ε=3.2, δ=1e-5)",
+            "[DP] Noise multiplier 1.1 applied to local parameter gradients (epsilon=3.2, delta=1e-5)",
             "[HE] Encrypted 42 tensor weight layers into CKKS ciphertext vectors",
             "[gRPC] Transmitted 48.2 KB ciphertext update over TLS 1.3 encrypted channel"
         ]
