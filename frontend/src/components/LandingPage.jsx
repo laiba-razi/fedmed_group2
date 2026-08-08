@@ -76,14 +76,6 @@ export default function LandingPage({ setActiveTab }) {
           {/* Left Column: Headlines & Primary CTA (Positioned UP) */}
           <div className="lg:col-span-7 space-y-6 relative z-10 p-2 sm:p-5 rounded-3xl bg-black/40 backdrop-blur-md border border-slate-800/40 shadow-2xl">
             
-            {/* Top Security Pill */}
-            <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-semibold text-slate-300 shadow-xl backdrop-blur-md max-w-full">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="whitespace-nowrap">HIPAA & GDPR Compliant</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping shrink-0 hidden sm:inline-block"></span>
-              <span className="text-cyan-400 font-mono whitespace-nowrap">Edge Federated Engine</span>
-            </div>
-
             {/* Main Silver Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-silver-gradient">
               Secure, Local AI Training for MRI Diagnostics.
@@ -145,9 +137,6 @@ export default function LandingPage({ setActiveTab }) {
                     Local Node: Hospital Silo 1
                   </span>
                 </div>
-                <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-2.5 py-1 rounded-md">
-                  ENCRYPTED RUNTIME
-                </span>
               </div>
 
               {/* MRI Processing Preview Box */}

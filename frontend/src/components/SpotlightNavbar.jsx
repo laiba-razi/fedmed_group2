@@ -191,13 +191,8 @@ export function SpotlightNavbar({
           </nav>
         </div>
 
-        {/* Right CTA & Badge */}
+        {/* Right CTA */}
         <div className="flex items-center gap-4">
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-emerald-300 text-xs font-medium">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>HIPAA / GDPR Verified</span>
-          </div>
-
           <button
             onClick={() => setActiveTab && setActiveTab('dashboard')}
             className="btn-silver"
