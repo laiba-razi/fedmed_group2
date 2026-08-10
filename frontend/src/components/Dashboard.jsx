@@ -17,28 +17,22 @@ import {
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 
 export default function Dashboard() {
-  const defaultRounds = [
-    { round: 'R1', federatedLoss: '1.5308', centralizedLoss: '1.4083', diceScore: '42.1%' },
-    { round: 'R2', federatedLoss: '0.8227', centralizedLoss: '0.7569', diceScore: '58.4%' },
-    { round: 'R3', federatedLoss: '0.4350', centralizedLoss: '0.4002', diceScore: '66.9%' },
-    { round: 'R4', federatedLoss: '0.2410', centralizedLoss: '0.2217', diceScore: '71.2%' },
-    { round: 'R5', federatedLoss: '0.1850', centralizedLoss: '0.1702', diceScore: '73.5%' },
-  ];
-
-  const [metricsData, setMetricsData] = useState(defaultRounds);
+  const [metricsData, setMetricsData] = useState([]);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [backendStatus, setBackendStatus] = useState('OFFLINE'); // 'OFFLINE' | 'CONNECTING' | 'ONLINE'
+  const [isStartingBackend, setIsStartingBackend] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const [summaryMetrics, setSummaryMetrics] = useState({
-    activeNodes: '3 / 3',
-    diceScore: '73.5%',
-    trainLoss: '0.1850',
+    activeNodes: '0 / 3',
+    diceScore: '--',
+    trainLoss: '--',
     dataExposed: '0 Bytes'
   });
 
   const [nodes, setNodes] = useState([
-    { id: 'Node-1', name: 'St. Jude Children\'s Hospital', port: 8081, samples: 417, status: 'ONLINE', loss: '0.185', dice: '73.8%', latency: '18ms' },
-    { id: 'Node-2', name: 'Mayo Clinic Neuroradiology', port: 8082, samples: 420, status: 'ONLINE', loss: '0.189', dice: '73.2%', latency: '24ms' },
-    { id: 'Node-3', name: 'Charité University Hospital Berlin', port: 8083, samples: 414, status: 'ONLINE', loss: '0.183', dice: '73.5%', latency: '31ms' },
+    { id: 'Node-1', name: 'St. Jude Children\'s Hospital', port: 8081, samples: 417, status: 'IDLE', loss: '--', dice: '--', latency: '18ms' },
+    { id: 'Node-2', name: 'Mayo Clinic Neuroradiology', port: 8082, samples: 420, status: 'IDLE', loss: '--', dice: '--', latency: '24ms' },
+    { id: 'Node-3', name: 'Charité University Hospital Berlin', port: 8083, samples: 414, status: 'IDLE', loss: '--', dice: '--', latency: '31ms' },
   ]);
 
   const processMetricsData = (data) => {
@@ -72,11 +66,12 @@ export default function Dashboard() {
     try {
       const res = await fetch('http://127.0.0.1:8000/api/metrics');
       if (res.ok) {
+        setBackendStatus('ONLINE');
         const data = await res.json();
         processMetricsData(data);
       }
     } catch (err) {
-      // Keep existing metrics if backend unreachable
+      // Offline fallback
     }
   };
 
@@ -91,6 +86,7 @@ export default function Dashboard() {
         try {
           const wsData = JSON.parse(event.data);
           processMetricsData(wsData);
+          setBackendStatus('ONLINE');
         } catch (e) {
           // Ignore json parse error
         }
@@ -108,9 +104,40 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Initialize backend server connection and reset simulation state
+  const handleStartBackend = async () => {
+    setIsStartingBackend(true);
+    setBackendStatus('CONNECTING');
+    setStatusMsg('Initializing backend server connection & hospital silo endpoints...');
 
-  // Trigger FL simulation via FastAPI endpoint or fallback simulation
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/reset', { method: 'POST' });
+      if (res.ok) {
+        setBackendStatus('ONLINE');
+        setStatusMsg('Backend server connected (FastAPI port 8000). Hospital nodes initialized and ready. Click "Run FL Simulation" to start.');
+      } else {
+        const rootRes = await fetch('http://127.0.0.1:8000/');
+        if (rootRes.ok) {
+          setBackendStatus('ONLINE');
+          setStatusMsg('Backend API online! Ready for FL Simulation.');
+        } else {
+          setBackendStatus('OFFLINE');
+          setStatusMsg('Backend server error. Ensure `python -m backend.api` is running.');
+        }
+      }
+    } catch (err) {
+      setBackendStatus('OFFLINE');
+      setStatusMsg('Backend API offline. Make sure `python -m backend.api` is running in terminal, then click "Start Backend".');
+    } finally {
+      setIsStartingBackend(false);
+    }
+  };
+
+  // Trigger FL simulation via FastAPI endpoint
   const handleStartSimulation = async () => {
+    if (backendStatus === 'OFFLINE') {
+      setStatusMsg('Connecting to backend... Please ensure `python -m backend.api` is active.');
+    }
     setIsSimulating(true);
     setMetricsData([]);
     setSummaryMetrics({
@@ -129,42 +156,15 @@ export default function Dashboard() {
       });
       if (res.ok) {
         const data = await res.json();
+        setBackendStatus('ONLINE');
         setStatusMsg(data.message || 'Federated Learning loop launched! Training in progress...');
-        setTimeout(() => setIsSimulating(false), 13000);
       } else {
-        throw new Error('API response not ok');
+        setStatusMsg('Backend API error. Ensure backend is running.');
       }
     } catch (err) {
-      // Client-side simulation fallback
-      setStatusMsg('Running Simulated FL Loop (5 Rounds)...');
-      const sampleRounds = [
-        { round: 'R1', federatedLoss: '1.5308', centralizedLoss: '1.4083', diceScore: '42.1%', rawLoss: 1.5308, rawDice: 0.421 },
-        { round: 'R2', federatedLoss: '0.8227', centralizedLoss: '0.7569', diceScore: '58.4%', rawLoss: 0.8227, rawDice: 0.584 },
-        { round: 'R3', federatedLoss: '0.4350', centralizedLoss: '0.4002', diceScore: '66.9%', rawLoss: 0.4350, rawDice: 0.669 },
-        { round: 'R4', federatedLoss: '0.2410', centralizedLoss: '0.2217', diceScore: '71.2%', rawLoss: 0.2410, rawDice: 0.712 },
-        { round: 'R5', federatedLoss: '0.1850', centralizedLoss: '0.1702', diceScore: '73.5%', rawLoss: 0.1850, rawDice: 0.735 },
-      ];
-
-      sampleRounds.forEach((r, idx) => {
-        setTimeout(() => {
-          setMetricsData(prev => [...prev, r]);
-          setSummaryMetrics({
-            activeNodes: '3 / 3',
-            diceScore: r.diceScore,
-            trainLoss: r.federatedLoss,
-            dataExposed: '0 Bytes'
-          });
-          setNodes([
-            { id: 'Node-1', name: 'St. Jude Children\'s Hospital', port: 8081, samples: 417, status: 'ONLINE', loss: Number(r.rawLoss).toFixed(3), dice: `${(r.rawDice * 100 + 0.3).toFixed(1)}%`, latency: '18ms' },
-            { id: 'Node-2', name: 'Mayo Clinic Neuroradiology', port: 8082, samples: 420, status: 'ONLINE', loss: Number(r.rawLoss * 1.02).toFixed(3), dice: `${(r.rawDice * 100 - 0.3).toFixed(1)}%`, latency: '24ms' },
-            { id: 'Node-3', name: 'Charité University Hospital Berlin', port: 8083, samples: 414, status: 'ONLINE', loss: Number(r.rawLoss * 0.99).toFixed(3), dice: `${(r.rawDice * 100).toFixed(1)}%`, latency: '31ms' },
-          ]);
-          if (idx === sampleRounds.length - 1) {
-            setIsSimulating(false);
-            setStatusMsg('Federated training complete! Final accuracy 73.5% (Baseline 74.1%).');
-          }
-        }, (idx + 1) * 2000);
-      });
+      setStatusMsg('Backend API offline. Click "Start Backend" or ensure `python -m backend.api` is running.');
+    } finally {
+      setTimeout(() => setIsSimulating(false), 4000);
     }
   };
 
@@ -187,18 +187,49 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* Button 1: Start Backend */}
+          <button
+            onClick={handleStartBackend}
+            disabled={isStartingBackend}
+            className={`text-xs flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-semibold border ${
+              backendStatus === 'ONLINE'
+                ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/80 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                : 'bg-slate-900 text-slate-200 border-slate-700 hover:border-cyan-500 hover:text-cyan-300 shadow-md'
+            }`}
+          >
+            {isStartingBackend ? (
+              <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+            ) : backendStatus === 'ONLINE' ? (
+              <Server className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <Server className="w-4 h-4 text-cyan-400" />
+            )}
+            <span>
+              {isStartingBackend
+                ? 'Starting Backend...'
+                : backendStatus === 'ONLINE'
+                ? 'Backend Ready ✓'
+                : 'Start Backend'}
+            </span>
+          </button>
+
+          {/* Button 2: Run FL Simulation */}
           <button
             onClick={handleStartSimulation}
             disabled={isSimulating}
             className="btn-silver text-xs flex items-center gap-2"
           >
-            {isSimulating ? <Loader2 className="w-4 h-4 animate-spin text-cyan-400" /> : <Play className="w-4 h-4 text-emerald-400" />}
+            {isSimulating ? (
+              <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+            ) : (
+              <Play className="w-4 h-4 text-emerald-400" />
+            )}
             <span>{isSimulating ? 'Starting Simulation...' : 'Run FL Simulation'}</span>
           </button>
 
           <div className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>gRPC TLS Secure</span>
+            <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === 'ONLINE' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+            <span>{backendStatus === 'ONLINE' ? 'gRPC TLS Secure' : 'Backend Standby'}</span>
           </div>
         </div>
       </div>
@@ -272,7 +303,7 @@ export default function Dashboard() {
                 <Sparkles className="w-10 h-10 text-cyan-400 mx-auto animate-pulse" />
                 <h4 className="font-bold text-slate-200 text-sm">Engine Ready for Federated Training</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Click the <strong className="text-emerald-400">"Run FL Simulation"</strong> button above to launch 3 hospital client nodes and stream live training loss metrics round by round.
+                  Click <strong className="text-cyan-400">"Start Backend"</strong> to initialize the server connection, then click <strong className="text-emerald-400">"Run FL Simulation"</strong> to launch 3 hospital client nodes and stream live training loss metrics round by round.
                 </p>
               </div>
             ) : (
