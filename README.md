@@ -32,32 +32,65 @@
 ## 📖 System Architecture
 
 ```mermaid
-flowchart TD
-    User(["User / Clinical Researcher"]) --> ReactFE["React 18 + Vite + Tailwind CSS"]
-    
-    subgraph S1["Frontend Web Dashboard"]
-        ReactFE --> Dash["Live Convergence Dashboard (Recharts)"]
-        ReactFE --> MRI["3D MRI Tumor Slicer & Evaluator"]
-        ReactFE --> Audit["PPML Cryptography Audit Terminal"]
+graph TD
+    %% Custom Styles for Nodes
+    classDef frontend fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef server fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef client fill:#1e293b,stroke:#6366f1,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef privacy fill:#334155,stroke:#f59e0b,stroke-width:1px,color:#fbbf24,stroke-dasharray: 5 5;
+
+    %% Tier 1: Frontend
+    subgraph UI [🖥️ Frontend Web Dashboard]
+        direction LR
+        React[React 18 + Vite + Tailwind CSS]:::frontend
+        Dash[Live Convergence Dashboard]:::frontend
+        Slicer[3D MRI Tumor Slicer]:::frontend
+        Audit[PPML Audit Terminal]:::frontend
     end
-    
-    ReactFE -->|"REST API & WebSockets (/ws/metrics)"| FastAPI["FastAPI Backend Server (Port 8000)"]
-    
-    subgraph S2["Backend Core Engine"]
-        FastAPI --> FlowerServer["Flower Server (FedMedStrategy - FedAvg)"]
-        FastAPI --> PrivacyEngine["Privacy Engine (TenSEAL CKKS & Opacus DP)"]
-        FastAPI --> MetricsLog["Metrics Storage (fl_metrics.json)"]
+
+    %% Tier 2: Backend Aggregation
+    subgraph Backend [⚙️ Backend Core Engine]
+        API[FastAPI Backend Server]:::server
+        Flwr[Flower Server <br> Strategy: FedMed / FedAvg]:::server
+        Store[(Metrics Storage <br> fl_metrics.json)]:::server
+        
+        API <--> Flwr
+        Flwr --> Store
     end
-    
-    FlowerServer -->|"gRPC TLS v1.3 Channel"| Node1["Hospital Silo 1: St. Jude (Port 8081)"]
-    FlowerServer -->|"gRPC TLS v1.3 Channel"| Node2["Hospital Silo 2: Mayo Clinic (Port 8082)"]
-    FlowerServer -->|"gRPC TLS v1.3 Channel"| Node3["Hospital Silo 3: Charité Berlin (Port 8083)"]
-    
-    subgraph S3["Hospital Node Pipeline (Local Execution)"]
-        Node1 --> PyTorch1["PyTorch / MONAI 3D U-Net Model"]
-        Node1 --> DP1["Opacus Differential Privacy (epsilon=3.2, delta=1e-5)"]
-        Node1 --> CKKS1["TenSEAL CKKS Ciphertext Vector Serialization"]
+
+    %% Connection between Frontend and Backend
+    React <-->|REST API & WebSockets /ws/metrics| API
+
+    %% Tier 3: Hospital Nodes
+    subgraph Clients [🏥 Hospital Node Pipeline Local Execution]
+        direction LR
+        Silo1[Hospital Silo 1 <br> St. Jude]:::client
+        Silo2[Hospital Silo 2 <br> Mayo Clinic]:::client
+        Silo3[Hospital Silo 3 <br> Charité Berlin]:::client
     end
+
+    %% FL Communication Loop
+    Flwr <-->|gRPC TLS v1.3 Channel| Silo1
+    Flwr <-->|gRPC TLS v1.3 Channel| Silo2
+    Flwr <-->|gRPC TLS v1.3 Channel| Silo3
+
+    %% Privacy Engine Details (Linked to a node for context)
+    subgraph LocalEngine [🔒 Local Privacy Engine Per Node]
+        direction TB
+        Model[PyTorch / MONAI <br> 3D U-Net Model]:::privacy
+        DP[Opacus DP <br> epsilon=3.2, delta=1e-5]:::privacy
+        HE[TenSEAL CKKS <br> Ciphertext Serialization]:::privacy
+        
+        Model --> DP --> HE
+    end
+
+    Silo1 -.->|Executes| LocalEngine
+
+    %% --- Subgraph Background Styling (Removes default beige/grey fills) ---
+    style UI fill:transparent,stroke:#475569,stroke-width:2px,stroke-dasharray: 5 5
+    style Backend fill:transparent,stroke:#475569,stroke-width:2px,stroke-dasharray: 5 5
+    style Clients fill:transparent,stroke:#475569,stroke-width:2px,stroke-dasharray: 5 5
+    style LocalEngine fill:transparent,stroke:#f59e0b,stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 ---
