@@ -74,3 +74,13 @@ tensorboard/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# ===============================
+# Reports & PDF Exports
+# ===============================
+project_report.html
+project_ppt.html
+project_report.pdf
+project_ppt.pdf
+*.pdf
+
