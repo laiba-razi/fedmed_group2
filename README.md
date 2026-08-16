@@ -13,33 +13,49 @@
 
 ---
 
+## 🖼️ Application Screenshots & Live Demo
+
+### 1. Landing Page & System Overview
+![FedMed Landing Page](screenshots/landingpage.png)
+
+### 2. Live Convergence Dashboard
+![Live Convergence Dashboard](screenshots/dashboard.png)
+
+### 3. 3D MRI Tumor Viewer & Evaluator
+![3D MRI Viewer](screenshots/3D_MRI_Viewer.png)
+
+### 4. PPML Cryptography Audit Terminal
+![Privacy & Security Audit Terminal](screenshots/Privacy&Security.png)
+
+---
+
 ## 📖 System Architecture
 
 ```mermaid
 flowchart TD
-    User([User / Clinical Researcher]) --> ReactFE["React 18 + Vite + Tailwind CSS"]
+    User(["User / Clinical Researcher"]) --> ReactFE["React 18 + Vite + Tailwind CSS"]
     
-    subgraph Frontend Web Dashboard
+    subgraph S1["Frontend Web Dashboard"]
         ReactFE --> Dash["Live Convergence Dashboard (Recharts)"]
         ReactFE --> MRI["3D MRI Tumor Slicer & Evaluator"]
         ReactFE --> Audit["PPML Cryptography Audit Terminal"]
     end
     
-    ReactFE -- "REST API & WebSockets (/ws/metrics)" --> FastAPI["FastAPI Backend Server (Port 8000)"]
+    ReactFE -->|"REST API & WebSockets (/ws/metrics)"| FastAPI["FastAPI Backend Server (Port 8000)"]
     
-    subgraph Backend Core Engine
+    subgraph S2["Backend Core Engine"]
         FastAPI --> FlowerServer["Flower Server (FedMedStrategy - FedAvg)"]
         FastAPI --> PrivacyEngine["Privacy Engine (TenSEAL CKKS & Opacus DP)"]
         FastAPI --> MetricsLog["Metrics Storage (fl_metrics.json)"]
     end
     
-    FlowerServer -- "gRPC TLS v1.3 Channel" --> Node1["Hospital Silo 1: St. Jude (Port 8081)"]
-    FlowerServer -- "gRPC TLS v1.3 Channel" --> Node2["Hospital Silo 2: Mayo Clinic (Port 8082)"]
-    FlowerServer -- "gRPC TLS v1.3 Channel" --> Node3["Hospital Silo 3: Charité Berlin (Port 8083)"]
+    FlowerServer -->|"gRPC TLS v1.3 Channel"| Node1["Hospital Silo 1: St. Jude (Port 8081)"]
+    FlowerServer -->|"gRPC TLS v1.3 Channel"| Node2["Hospital Silo 2: Mayo Clinic (Port 8082)"]
+    FlowerServer -->|"gRPC TLS v1.3 Channel"| Node3["Hospital Silo 3: Charité Berlin (Port 8083)"]
     
-    subgraph Hospital Node Pipeline (Local Execution)
+    subgraph S3["Hospital Node Pipeline (Local Execution)"]
         Node1 --> PyTorch1["PyTorch / MONAI 3D U-Net Model"]
-        Node1 --> DP1["Opacus Differential Privacy (ε=3.2, δ=1e-5)"]
+        Node1 --> DP1["Opacus Differential Privacy (epsilon=3.2, delta=1e-5)"]
         Node1 --> CKKS1["TenSEAL CKKS Ciphertext Vector Serialization"]
     end
 ```
@@ -141,4 +157,3 @@ Ran 3 tests in 0.658s - OK
 
 ## 📜 License
 Distributed under the MIT License. See `LICENSE` for more information.
-
